@@ -1,10 +1,4 @@
-# SACI's API
-
-SACI's API documentation.
-
-Summary:
-
-[TOC]
+# API
 
 ## How to use it
 
@@ -35,9 +29,7 @@ curl 200.17.212.244:4000/v1/report/1139bb22-ca7e-44c1-9995-ad0908d3f609
 After the status is marked as "Completed", you can retrieve the report using
 this command.
 
-## Installation
-
-TODO
+## Build instructions (TODO)
 
 ```
 PROXMOX_NODE=
