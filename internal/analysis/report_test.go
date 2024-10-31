@@ -5,9 +5,9 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/drypb/api/internal/assert"
 	"github.com/drypb/api/internal/data"
 	"github.com/google/uuid"
+	"github.com/stretchr/testify/assert"
 )
 
 var mockedReport = &Report{
@@ -34,40 +34,40 @@ var mockedReport = &Report{
 
 func TestSaveReport(t *testing.T) {
 	err := os.Mkdir(data.DefaultReportPath, os.ModePerm)
-	assert.NilError(t, err)
+	assert.Nil(t, err)
 	defer os.RemoveAll(data.DefaultReportPath)
 	err = mockedReport.saveReport()
-	assert.NilError(t, err)
+	assert.Nil(t, err)
 }
 
 func TestSaveStatus(t *testing.T) {
 	err := os.Mkdir(data.DefaultStatusPath, os.ModePerm)
-	assert.NilError(t, err)
+	assert.Nil(t, err)
 	defer os.RemoveAll(data.DefaultStatusPath)
 	err = mockedReport.saveStatus()
-	assert.NilError(t, err)
+	assert.Nil(t, err)
 }
 
 func TestSave(t *testing.T) {
 	err := mockedReport.Save("status")
-	assert.NilError(t, err)
+	assert.Nil(t, err)
 	err = mockedReport.Save("status")
-	assert.NilError(t, err)
+	assert.Nil(t, err)
 	err = mockedReport.Save("asdf")
 	assert.Error(t, err)
 }
 
 func TestLoad(t *testing.T) {
 	err := os.Mkdir(data.DefaultReportPath, os.ModePerm)
-	assert.NilError(t, err)
+	assert.Nil(t, err)
 	defer os.RemoveAll(data.DefaultReportPath)
 
 	err = mockedReport.Save("report")
-	assert.NilError(t, err)
+	assert.Nil(t, err)
 
 	tmp := &Report{}
 	err = tmp.Load(mockedReport.Request.ID)
-	assert.NilError(t, err)
+	assert.Nil(t, err)
 
 	if !reflect.DeepEqual(mockedReport, tmp) {
 		t.Error("Repor struct is not the same after saving and loading.")
