@@ -1,4 +1,4 @@
-module gitlab.c3sl.ufpr.br/saci/api
+module github.com/drypb/api
 
 go 1.22.3
 

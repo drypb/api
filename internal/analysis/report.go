@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"gitlab.c3sl.ufpr.br/saci/api/internal/data"
+	"github.com/drypb/api/internal/data"
 )
 
 // Report of the analysis

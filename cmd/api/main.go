@@ -9,8 +9,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/drypb/api/internal/jsonlog"
 	amqp "github.com/rabbitmq/amqp091-go"
-	"gitlab.c3sl.ufpr.br/saci/api/internal/jsonlog"
 )
 
 const version = "1.0.0"

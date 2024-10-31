@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"gitlab.c3sl.ufpr.br/saci/api/internal/proxmox"
+	"github.com/drypb/api/internal/proxmox"
 
 	"golang.org/x/crypto/ssh"
 )

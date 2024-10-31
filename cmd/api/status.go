@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/drypb/api/internal/data"
 	"github.com/gorilla/websocket"
-	"gitlab.c3sl.ufpr.br/saci/api/internal/data"
 )
 
 const (

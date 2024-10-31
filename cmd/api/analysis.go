@@ -11,9 +11,9 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/drypb/api/internal/data"
+	"github.com/drypb/api/internal/validator"
 	"github.com/google/uuid"
-	"gitlab.c3sl.ufpr.br/saci/api/internal/data"
-	"gitlab.c3sl.ufpr.br/saci/api/internal/validator"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 )

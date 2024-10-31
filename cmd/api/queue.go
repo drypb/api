@@ -6,8 +6,8 @@ import (
 	"log"
 	"mime/multipart"
 
+	"github.com/drypb/api/internal/analysis"
 	amqp "github.com/rabbitmq/amqp091-go"
-	"gitlab.c3sl.ufpr.br/saci/api/internal/analysis"
 )
 
 func newQueue(cfg config) *queue {

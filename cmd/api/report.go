@@ -6,8 +6,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"gitlab.c3sl.ufpr.br/saci/api/internal/analysis"
-	"gitlab.c3sl.ufpr.br/saci/api/internal/data"
+	"github.com/drypb/api/internal/analysis"
+	"github.com/drypb/api/internal/data"
 )
 
 // getReportHandler returns the report of a analysis.

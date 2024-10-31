@@ -10,9 +10,9 @@ import (
 	"os"
 	"strings"
 
+	"github.com/drypb/api/internal/data"
 	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
-	"gitlab.c3sl.ufpr.br/saci/api/internal/data"
 )
 
 var (

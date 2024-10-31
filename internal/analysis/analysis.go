@@ -12,8 +12,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/drypb/api/internal/data"
 	"github.com/pkg/sftp"
-	"gitlab.c3sl.ufpr.br/saci/api/internal/data"
 	"golang.org/x/crypto/ssh"
 )
 
