@@ -91,12 +91,12 @@ func New(header *multipart.FileHeader, id string, template int) (*Analysis, erro
 		},
 	}
 
-	err = a.Report.Save()
+	err = a.Report.Save("status")
 	if err != nil {
 		return nil, err
 	}
 
-	err = a.Report.SaveAll()
+	err = a.Report.Save("report")
 	if err != nil {
 		return nil, err
 	}
@@ -124,7 +124,8 @@ func (a *Analysis) Run(parent context.Context) error {
 // Run orchestrates the entire analysis proccess.
 func (a *Analysis) runWithoutCtx() error {
 	a.Report.LogThis("Providing environment...")
-	if err := a.provideEnv(); err != nil {
+	err := a.create()
+	if err != nil {
 		return err
 	}
 	a.Report.LogThis("Analysis environment created")
@@ -189,12 +190,12 @@ func (a *Analysis) runWithoutCtx() error {
 	a.Report.LogThis("Results retrieved")
 
 	a.Report.Request.Status = "Completed"
-	err := a.Report.Save()
+	err := a.Report.Save("status")
 	if err != nil {
 		return err
 	}
 
-	err = a.Report.SaveAll()
+	err = a.Report.Save("report")
 	if err != nil {
 		return err
 	}
@@ -207,18 +208,7 @@ func (a *Analysis) runWithoutCtx() error {
 	return nil
 }
 
-// provideEnv creates and starts the virtual environment.
-func (a *Analysis) provideEnv() error {
-	if err := a.env.create(); err != nil {
-		return fmt.Errorf("failed to create environment: %v", err)
-	}
-
-	// TODO: disable real time protection
-
-	return nil
-}
-
-// sendSample uploads the malware sample to the virtual environment.
+// SendSample uploads the malware sample to the virtual environment.
 func (a *Analysis) sendSample() error {
 	localPath := filepath.Join(data.DefaultSamplePath, a.Report.Request.ID+a.Report.Request.File.Extension)
 	remotePath := "./sample" + a.Report.Request.File.Extension
@@ -248,7 +238,7 @@ func (a *Analysis) sendSample() error {
 	return nil
 }
 
-// runSample remotely executes a program that will execute the malware sample
+// RunSample remotely executes a program that will execute the malware sample
 // inside the virtual environment using the amaterasu driver to inspect its
 // process.
 func (a *Analysis) runSample() error {
@@ -284,7 +274,7 @@ func (a *Analysis) runSample() error {
 	return nil
 }
 
-// getLog remotely gets the malware artifact from the virtual environment.
+// GetLog remotely gets the malware artifact from the virtual environment.
 func (a *Analysis) getLog() error {
 	client, err := sftp.NewClient(a.env.sshClient)
 	if err != nil {
@@ -397,12 +387,5 @@ func (a *Analysis) Cleanup() error {
 	if err != nil {
 		return fmt.Errorf("failed to destroy environment: %v", err)
 	}
-
-	// path := filepath.Join(data.DefaultSamplePath, a.Report.Request.ID+a.Report.Request.File.Extension)
-	// err := os.Remove(path)
-	// if err != nil {
-	// 	return fmt.Errorf("failed to remove local file: %v", err)
-	// }
-
 	return nil
 }

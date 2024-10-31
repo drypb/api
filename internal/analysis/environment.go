@@ -15,8 +15,6 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-// The Environment struct gather information about where the analysis will be
-// running on.
 type Environment struct {
 	templateID int
 	vm         *proxmox.VirtualMachine
@@ -97,7 +95,7 @@ func (e *Environment) startVMWithRetry(attempts int, delay time.Duration) error 
 	return fmt.Errorf("failed to start virtual machine after %d attempts", attempts)
 }
 
-// handleSSH creates a SSH connection with the guest VM.
+// HandleSSH creates a SSH connection with the guest VM.
 func (e *Environment) handleSSH() error {
 	if err := e.getIP(); err != nil {
 		return fmt.Errorf("failed to get virtual machine IP: %v", err)
@@ -113,7 +111,7 @@ func (e *Environment) handleSSH() error {
 	return nil
 }
 
-// getIP tries to get a valid IPv4 to the environment virtual machine.
+// GetIP tries to get a valid IPv4 to the environment virtual machine.
 func (e *Environment) getIP() error {
 	iFaces, err := e.vm.NetworkInterfaces(context.Background())
 	if err != nil {
@@ -185,7 +183,7 @@ func (e *Environment) connectSSHWithRetry(config *ssh.ClientConfig, attempts int
 	return nil
 }
 
-// destroy deletes the environment.
+// Destroy deletes the environment.
 func (e *Environment) destroy() error {
 	attempts := 6
 	delay := 5 * time.Second

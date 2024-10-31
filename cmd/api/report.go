@@ -10,7 +10,7 @@ import (
 	"github.com/drypb/api/internal/data"
 )
 
-// getReportHandler returns the report of a analysis.
+// GetReportHandler returns the report of an analysis.
 func (app *application) getReportHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := app.ReadIDParam(r)
 	if err != nil {

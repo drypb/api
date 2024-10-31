@@ -78,8 +78,8 @@ func (app *application) consume() error {
 		err = a.Run(context.Background())
 		if err != nil {
 			a.Report.Request.Error = err.Error()
-			a.Report.Save()
-			a.Report.SaveAll()
+			a.Report.Save("status")
+			a.Report.Save("report")
 			err = a.Cleanup()
 			if err != nil {
 				return err
