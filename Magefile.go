@@ -27,3 +27,15 @@ func Clean() error {
 	}
 	return nil
 }
+
+func Deploy() error {
+	err := sh.Run("sudo", "docker", "build", "-t", "api:latest", ".")
+	if err != nil {
+		return err
+	}
+	err = sh.Run("sudo", "docker", "compose", "up", "-d")
+	if err != nil {
+		return err
+	}
+	return nil
+}
