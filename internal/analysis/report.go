@@ -117,8 +117,20 @@ func (r *Report) Load(id string) error {
 	return nil
 }
 
-// Save saves the report from memory to disk.
-func (r *Report) Save() error {
+// Save saves the report or status from memory to disk.
+func (r *Report) Save(what string) error {
+	switch what {
+	case "status":
+		r.saveStatus()
+	case "report":
+		r.saveReport()
+	default:
+		return fmt.Errorf("report: invalid option")
+	}
+	return nil
+}
+
+func (r *Report) saveStatus() error {
 	if r.Request.ID == "" {
 		return errors.New("Analysis ID is not set")
 	}
@@ -139,7 +151,7 @@ func (r *Report) Save() error {
 	return nil
 }
 
-func (r *Report) SaveAll() error {
+func (r *Report) saveReport() error {
 	if r.Request.ID == "" {
 		return errors.New("Analysis ID is not set")
 	}
@@ -163,7 +175,7 @@ func (r *Report) SaveAll() error {
 
 func (r *Report) LogThis(message string) {
 	r.Request.Log = append(r.Request.Log, formatLog(message))
-	r.Save()
+	r.Save("status")
 }
 
 func formatLog(message string) string {
