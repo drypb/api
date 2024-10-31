@@ -29,7 +29,9 @@ curl 200.17.212.244:4000/v1/report/1139bb22-ca7e-44c1-9995-ad0908d3f609
 After the status is marked as "Completed", you can retrieve the report using
 this command.
 
-## Build instructions (TODO)
+## Build instructions
+
+1. Create api.env
 
 ```
 PROXMOX_NODE=
@@ -39,3 +41,9 @@ PROXMOX_URL=
 QUEUE_URL=
 ```
 
+2. Build
+
+```
+docker build -t api:latest .
+docker compose up -d
+```
