@@ -124,13 +124,14 @@ func (a *Analysis) Run(parent context.Context) error {
 // Run orchestrates the entire analysis proccess.
 func (a *Analysis) runWithoutCtx() error {
 	a.Report.LogThis("Providing environment...")
-	err := a.create()
+	err := a.env.create()
 	if err != nil {
 		return err
 	}
 	a.Report.LogThis("Analysis environment created")
 
-	if err := a.sendSample(); err != nil {
+	err = a.sendSample()
+	if err != nil {
 		return err
 	}
 	a.Report.LogThis("Sample sent to environment")
@@ -184,13 +185,14 @@ func (a *Analysis) runWithoutCtx() error {
 		}
 	}
 
-	if err := a.getLog(); err != nil {
+	err = a.getLog()
+	if err != nil {
 		return err
 	}
 	a.Report.LogThis("Results retrieved")
 
 	a.Report.Request.Status = "Completed"
-	err := a.Report.Save("status")
+	err = a.Report.Save("status")
 	if err != nil {
 		return err
 	}
@@ -200,7 +202,8 @@ func (a *Analysis) runWithoutCtx() error {
 		return err
 	}
 
-	if err := a.Cleanup(); err != nil {
+	err = a.Cleanup()
+	if err != nil {
 		return err
 	}
 	a.Report.LogThis("Environment deleted")
