@@ -39,10 +39,3 @@ PROXMOX_URL=
 QUEUE_URL=
 ```
 
-## See also
-
-- <https://gitlab.c3sl.ufpr.br/saci/backend>
-- <https://gitlab.c3sl.ufpr.br/saci/frontend>
-- <https://gitlab.c3sl.ufpr.br/saci/samples>
-- <https://gitlab.c3sl.ufpr.br/saci/docs>
-
