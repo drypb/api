@@ -3,10 +3,10 @@
 FROM golang:1.22.6 AS build-stage
 WORKDIR /app
 COPY . .
-RUN make build
+RUN go build -o bin/api ./cmd/api
 
 FROM build-stage AS test-stage
-RUN make test
+RUN go test ./...
 
 FROM test-stage AS deploy-stage
 EXPOSE 8080
