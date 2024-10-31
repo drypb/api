@@ -5,8 +5,8 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/drypb/api/internal/data"
 	"github.com/google/uuid"
-	"gitlab.c3sl.ufpr.br/saci/api/internal/data"
 )
 
 func TestReportFileIO(t *testing.T) {
