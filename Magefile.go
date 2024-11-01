@@ -10,27 +10,15 @@ import (
 )
 
 func Build() error {
-	err := sh.Run("go", "build", "-o", "bin/api", "./cmd/api")
-	if err != nil {
-		return err
-	}
-	return nil
+	return sh.Run("go", "build", "-o", "bin/api", "./cmd/api")
 }
 
 func Test() error {
-	err := sh.Run("go", "test", "./...")
-	if err != nil {
-		return err
-	}
-	return nil
+	return sh.Run("go", "test", "./...")
 }
 
 func Clean() error {
-	err := sh.Run("rm", "-rf", "bin")
-	if err != nil {
-		return err
-	}
-	return nil
+	return sh.Run("rm", "-rf", "bin")
 }
 
 func Deploy() error {
