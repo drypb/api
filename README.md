@@ -45,6 +45,5 @@ QUEUE_URL=
 2. Build
 
 ```
-docker build -t api:latest .
-docker compose up -d
+mage deploy
 ```
