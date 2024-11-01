@@ -27,7 +27,7 @@ func main() {
 
 	deploy := test.WithEntrypoint([]string{"./bin/api"})
 
-	_, err = deploy.Export(context.Background(), "/tmp/api:latest.tar")
+	_, err = deploy.Export(context.Background(), "/tmp/api.tar")
 	if err != nil {
 		log.Fatal(err)
 	}
