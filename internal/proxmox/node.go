@@ -6,13 +6,12 @@ import (
 	proxmoxAPI "github.com/luthermonson/go-proxmox"
 )
 
-// Node is a wrapper around the proxmoxAPI.Node struct.
+// Node is a wrapper around [proxmoxAPI.Node].
 type Node struct {
 	node *proxmoxAPI.Node
 }
 
-// VirtualMachine receives a proxmox virtual machine ID and returns a
-// VirtualMachine struct and an error, if any.
+// VirtualMachine returns a [VirtualMachine] by searching a matching id.
 func (n *Node) VirtualMachine(ctx context.Context, id int) (*VirtualMachine, error) {
 	vm, err := n.node.VirtualMachine(ctx, id)
 	if err != nil {

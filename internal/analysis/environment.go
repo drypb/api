@@ -1,4 +1,3 @@
-// The Environment is where the analysis will be running on.
 package analysis
 
 import (

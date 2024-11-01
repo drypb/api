@@ -1,3 +1,6 @@
+// API provides the interface for the user that wants a malware analysis.
+//
+// See README and [analysis] for more details.
 package main
 
 import (

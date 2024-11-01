@@ -1,3 +1,4 @@
+// Package proxmox is an adapter to a proxmox API.
 package proxmox
 
 import (
@@ -10,12 +11,12 @@ import (
 	proxmoxAPI "github.com/luthermonson/go-proxmox"
 )
 
-// Client is a wrapper around the proxmoxAPI.Client struct.
+// Client is a wrapper around [proxmoxAPI.Client].
 type Client struct {
 	client *proxmoxAPI.Client
 }
 
-// NewClient returns a new instance of the Client struct.
+// NewClient creates a new [Client].
 func NewClient() *Client {
 	url := proxmoxURL()
 	id := tokenID()
@@ -41,7 +42,7 @@ func NewClient() *Client {
 	return c
 }
 
-// tokenID returns the proxmox token id from PROXMOX_TOKEN_ID.
+// TokenID returns the proxmox token id from PROXMOX_TOKEN_ID.
 func tokenID() string {
 	id := os.Getenv("PROXMOX_TOKEN_ID")
 	if id == "" {
@@ -50,7 +51,7 @@ func tokenID() string {
 	return id
 }
 
-// tokenSecret returns the proxmox token secret from PROXMOX_TOKEN_SECRET.
+// TokenSecret returns the proxmox token secret from PROXMOX_TOKEN_SECRET.
 func tokenSecret() string {
 	s := os.Getenv("PROXMOX_TOKEN_SECRET")
 	if s == "" {
@@ -59,7 +60,7 @@ func tokenSecret() string {
 	return s
 }
 
-// proxmoxURL returns the proxmox server URL from PROXMOX_URL.
+// ProxmoxURL returns the proxmox server URL from PROXMOX_URL.
 func proxmoxURL() string {
 	url := os.Getenv("PROXMOX_URL")
 	if url == "" {
@@ -68,7 +69,7 @@ func proxmoxURL() string {
 	return url
 }
 
-// Node receives a node name and returns a Node struct and an error, if any.
+// Node returns a [Node] given it's name.
 func (c *Client) Node(ctx context.Context, name string) (*Node, error) {
 	n, err := c.client.Node(ctx, name)
 	if err != nil {

@@ -1,3 +1,4 @@
+// Package analysis is responsable for the malware execution orchestration.
 package analysis
 
 import (
@@ -18,7 +19,7 @@ import (
 )
 
 var (
-	ErrFileEmpty = errors.New("log file is empty")
+	ErrFileEmpty = errors.New("log file is empty") // ErrFileEmpty occurs when the driver log file is empty.
 )
 
 const (
@@ -32,11 +33,11 @@ const (
 )
 
 type Analysis struct {
-	Report *Report
-	env    *Environment
+	Report *Report      // Report represents the final artifact of the analysis process.
+	env    *Environment // Environment represents where the analysis will occur.
 }
 
-// New returns a new analysis object.
+// New creates an [Analysis] object.
 func New(header *multipart.FileHeader, id string, template int) (*Analysis, error) {
 	filename := header.Filename
 	ext := filepath.Ext(filename)
@@ -104,6 +105,7 @@ func New(header *multipart.FileHeader, id string, template int) (*Analysis, erro
 	return a, nil
 }
 
+// Run starts an [Analysis].
 func (a *Analysis) Run(parent context.Context) error {
 	ctx, cancel := context.WithTimeout(parent, analysisTimeout)
 	defer cancel()
@@ -121,7 +123,6 @@ func (a *Analysis) Run(parent context.Context) error {
 	}
 }
 
-// Run orchestrates the entire analysis proccess.
 func (a *Analysis) runWithoutCtx() error {
 	a.Report.LogThis("Providing environment...")
 	err := a.env.create()
@@ -361,19 +362,19 @@ func (a *Analysis) parseToJSON(filename string) error {
 
 	switch filename {
 	case "/tmp/reg.json":
-		if err = json.Unmarshal([]byte(modifiedContent), &a.Report.Process.Reg); err != nil {
+		if err = json.Unmarshal([]byte(modifiedContent), &a.Report.Process.WindowsRegisters); err != nil {
 			return err
 		}
 	case "/tmp/fs.json":
-		if err = json.Unmarshal([]byte(modifiedContent), &a.Report.Process.FS); err != nil {
+		if err = json.Unmarshal([]byte(modifiedContent), &a.Report.Process.WindowsFS); err != nil {
 			return err
 		}
 	case "/tmp/load.json":
-		if err = json.Unmarshal([]byte(modifiedContent), &a.Report.Process.Load); err != nil {
+		if err = json.Unmarshal([]byte(modifiedContent), &a.Report.Process.WindowsBinariesLoaded); err != nil {
 			return err
 		}
 	case "/tmp/proc.json":
-		if err = json.Unmarshal([]byte(modifiedContent), &a.Report.Process.Proc); err != nil {
+		if err = json.Unmarshal([]byte(modifiedContent), &a.Report.Process.WindowsProcess); err != nil {
 			return err
 		}
 	default:
@@ -383,7 +384,7 @@ func (a *Analysis) parseToJSON(filename string) error {
 	return nil
 }
 
-// Cleanup deletes the environment and the malware sample
+// Cleanup deletes the environment after the analysis finished.
 func (a *Analysis) Cleanup() error {
 	a.env.sshClient.Close()
 	err := a.env.destroy()

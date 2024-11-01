@@ -4,13 +4,12 @@ import (
 	proxmoxAPI "github.com/luthermonson/go-proxmox"
 )
 
-// NetworkIPAddress represents an IP address associated with a network
-// interface.
+// NetworkIPAddress represents an IP address.
 type NetworkIPAddress struct {
-	IPAddressType string // "ipv4" or "ipv6"
-	IPAddress     string
-	Prefix        int
-	MacAddress    string
+	IPAddressType string // IPAddressType is "ipv4" or "ipv6".
+	IPAddress     string // IPAddress is the netid+hostid.
+	Prefix        int    // Prefix is the CIDR.
+	MacAddress    string // MacAddress is the MAC address.
 }
 
 // NetworkInterface represents a network interface.
@@ -20,8 +19,8 @@ type NetworkInterface struct {
 	IPAddresses     []*NetworkIPAddress
 }
 
-// fromAPIIPAddress converts a proxmoxAPI.AgentNetworkIPAddress to a
-// NetworkIPAddress.
+// fromAPIIPAddress converts a [proxmoxAPI.AgentNetworkIPAddress] to a
+// [NetworkIPAddress].
 func fromAPIIPAddress(apiIP *proxmoxAPI.AgentNetworkIPAddress) *NetworkIPAddress {
 	return &NetworkIPAddress{
 		IPAddressType: apiIP.IPAddressType,
@@ -31,8 +30,8 @@ func fromAPIIPAddress(apiIP *proxmoxAPI.AgentNetworkIPAddress) *NetworkIPAddress
 	}
 }
 
-// fromAPIInterface converts a proxmoxAPI.AgentNetworkIface to a
-// NetworkInterface.
+// fromAPIInterface converts a [proxmoxAPI.AgentNetworkIface] to a
+// [NetworkInterface].
 func fromAPIInterface(apiIface *proxmoxAPI.AgentNetworkIface) *NetworkInterface {
 	var ipAddresses []*NetworkIPAddress
 	for _, apiIP := range apiIface.IPAddresses {

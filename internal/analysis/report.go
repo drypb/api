@@ -11,7 +11,7 @@ import (
 	"github.com/drypb/api/internal/data"
 )
 
-// Report of the analysis
+// Report represents the final artifact of the analysis process.
 type Report struct {
 	Request RequestMetadata `json:"requestMetadata"`
 	Process ProcessMetadata `json:"processMetadata"`
@@ -43,13 +43,13 @@ type FileMetadata struct {
 
 // Malware process information
 type ProcessMetadata struct {
-	Reg  []Reg        `json:"reg"`
-	FS   []FileSystem `json:"fs"`
-	Load []Load       `json:"load"`
-	Proc []Proc       `json:"proc"`
+	WindowsRegisters      []WindowsRegisters      `json:"reg"`
+	WindowsFS             []WindowsFileSystem     `json:"fs"`
+	WindowsBinariesLoaded []WindowsBinariesLoaded `json:"load"`
+	WindowsProcess        []WindowsProcess        `json:"proc"`
 }
 
-type Reg struct {
+type WindowsRegisters struct {
 	Date              string `json:"date"`
 	Time              string `json:"time"`
 	InfoType          string `json:"info type"`
@@ -59,7 +59,7 @@ type Reg struct {
 	Data              string `json:"data"`
 }
 
-type FileSystem struct {
+type WindowsFileSystem struct {
 	Date            string              `json:"date"`
 	Time            string              `json:"time"`
 	InfoType        string              `json:"info type"`
@@ -75,7 +75,7 @@ type FileSystem struct {
 	FileName        string              `json:"fileName"`
 }
 
-type Load struct {
+type WindowsBinariesLoaded struct {
 	Date          string `json:"date"`
 	Time          string `json:"time"`
 	InfoType      string `json:"info type"`
@@ -84,7 +84,7 @@ type Load struct {
 	Filename      string `json:"filename"`
 }
 
-type Proc struct {
+type WindowsProcess struct {
 	Date            string              `json:"date"`
 	Time            string              `json:"time"`
 	InfoType        string              `json:"info type"`
@@ -173,6 +173,7 @@ func (r *Report) saveReport() error {
 	return nil
 }
 
+// LogThis adds a message to [Report].
 func (r *Report) LogThis(message string) {
 	r.Request.Log = append(r.Request.Log, formatLog(message))
 	r.Save("status")

@@ -1,3 +1,4 @@
+// Package jsonlog helps the api to output log messages in JSON.
 package jsonlog
 
 import (
@@ -9,15 +10,17 @@ import (
 	"time"
 )
 
+// Level represents the type of the log.
 type Level int8
 
 const (
-	LevelInfo  Level = iota // 0
-	LevelError              // 1
-	LevelFatal              // 2
-	LevelOff                // 3
+	LevelInfo  Level = iota // LevelInfo is for normal infos.
+	LevelError              // LevelError is for errors.
+	LevelFatal              // LevelFatal is for fatal errors.
+	LevelOff                // LevelOff is here for future use.
 )
 
+// String returns the string representation of the [Level].
 func (l Level) String() string {
 	switch l {
 	case LevelInfo:
@@ -31,12 +34,14 @@ func (l Level) String() string {
 	}
 }
 
+// Logger
 type Logger struct {
 	out      io.Writer
 	minLevel Level
 	mu       sync.Mutex
 }
 
+// New creates a new [Logger].
 func New(out io.Writer, minLevel Level) *Logger {
 	return &Logger{
 		out:      out,
@@ -44,14 +49,17 @@ func New(out io.Writer, minLevel Level) *Logger {
 	}
 }
 
+// PrintInfo prints a message with [LevelInfo].
 func (l *Logger) PrintInfo(message string, properties map[string]string) {
 	l.print(LevelInfo, message, properties)
 }
 
+// PrintError prints an error with [LevelError].
 func (l *Logger) PrintError(err error, properties map[string]string) {
 	l.print(LevelError, err.Error(), properties)
 }
 
+// PrintFatal prints an error with [LevelFatal].
 func (l *Logger) PrintFatal(err error, properties map[string]string) {
 	l.print(LevelFatal, err.Error(), properties)
 	os.Exit(1)
@@ -93,6 +101,7 @@ func (l *Logger) print(level Level, message string, properties map[string]string
 	return l.out.Write(append(line, '\n'))
 }
 
+// Write implements the [io.Writer] interface.
 func (l *Logger) Write(message []byte) (n int, err error) {
 	return l.print(LevelError, string(message), nil)
 }
