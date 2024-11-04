@@ -4,9 +4,11 @@ package analysis
 import (
 	"context"
 	"encoding/json"
+	"encoding/xml"
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"mime/multipart"
 	"os"
 	"path/filepath"
@@ -26,10 +28,7 @@ const (
 	analysisTimeout        = 5 * time.Minute
 	sampleExecutionTimeout = 2 * time.Minute
 
-	remoteRegPath  = "/Users/administrator/reg.json"
-	remoteFSPath   = "/Users/administrator/fs.json"
-	remoteLoadPath = "/Users/administrator/load.json"
-	remoteProcPath = "/Users/administrator/proc.json"
+	remotePath = "/Users/administrator/"
 )
 
 type Analysis struct {
@@ -122,7 +121,6 @@ func (a *Analysis) Run(parent context.Context) error {
 		return fmt.Errorf("Analysis reached timeout (%v)", analysisTimeout)
 	}
 }
-
 func (a *Analysis) runWithoutCtx() error {
 	a.Report.LogThis("Providing environment...")
 	err := a.env.create()
@@ -164,7 +162,8 @@ func (a *Analysis) runWithoutCtx() error {
 			return
 		default:
 			a.Report.LogThis("Analysis started")
-			if err := a.runSample(); err != nil {
+			err := a.runSample()
+			if err != nil {
 				ch2 <- err
 				return
 			}
@@ -186,11 +185,16 @@ func (a *Analysis) runWithoutCtx() error {
 		}
 	}
 
-	err = a.getLog()
+	err = a.getResults()
 	if err != nil {
 		return err
 	}
 	a.Report.LogThis("Results retrieved")
+
+	err = a.parseResults()
+	if err != nil {
+		return err
+	}
 
 	a.Report.Request.Status = "Completed"
 	err = a.Report.Save("status")
@@ -259,7 +263,8 @@ func (a *Analysis) runSample() error {
 	go func() {
 		file := "sample" + a.Report.Request.File.Extension
 		cmd := "/Users/administrator/amaterasu.client.exe L M 1024 n " + file + " a"
-		if err = session.Run(cmd); err != nil {
+		err := session.Run(cmd)
+		if err != nil {
 			ch <- fmt.Errorf("failed to start driver: %v", err)
 		}
 	}()
@@ -278,107 +283,187 @@ func (a *Analysis) runSample() error {
 	return nil
 }
 
-// GetLog remotely gets the malware artifact from the virtual environment.
-func (a *Analysis) getLog() error {
+// GetResults remotely gets the malware artifact from virtual environment.
+func (a *Analysis) getResults() error {
 	client, err := sftp.NewClient(a.env.sshClient)
 	if err != nil {
-		return fmt.Errorf("failed to create SFTP client: %v", err)
+		return err
 	}
 	defer client.Close()
 
-	remote := []string{
-		remoteRegPath,
-		remoteFSPath,
-		remoteLoadPath,
-		remoteProcPath,
+	files := []string{
+		"reg.txt",
+		"fs.txt",
+		"load.txt",
+		"proc.txt",
 	}
-	local := []string{
-		"/tmp/reg.json",
-		"/tmp/fs.json",
-		"/tmp/load.json",
-		"/tmp/proc.json",
-	}
-	for i := 0; i < len(remote); i++ {
-		err = a.getLogByName(client, local[i], remote[i])
-		if err != nil && err != ErrFileEmpty {
+
+	for _, file := range files {
+		remoteFile, err := client.Open(filepath.Join(remotePath, file))
+		if err != nil {
+			return err
+		}
+		defer remoteFile.Close()
+
+		fi, _ := remoteFile.Stat()
+		if fi.Size() < 1 {
+			log.Println(ErrFileEmpty)
+			//return ErrFileEmpty
+		}
+
+		logIDDir := filepath.Join(config.LogPath, a.Report.Request.ID)
+		err = os.MkdirAll(logIDDir, 0750)
+		if err != nil {
+			return err
+		}
+		localPath := filepath.Join(logIDDir, file)
+		localFile, err := os.Create(localPath)
+		if err != nil {
+			return err
+		}
+		defer localFile.Close()
+
+		_, err = remoteFile.WriteTo(localFile)
+		if err != nil {
 			return err
 		}
 	}
 
-	// Write report.
-	js, err := json.Marshal(a.Report)
+	return nil
+}
+
+func (a *Analysis) parseResults() error {
+	var err error
+	err = a.parseReg()
 	if err != nil {
 		return err
 	}
-	path := config.ReportPath + "/" + a.Report.Request.ID + ".json"
-	if err = os.WriteFile(path, js, 0666); err != nil {
+	err = a.parseFS()
+	if err != nil {
+		return err
+	}
+	err = a.parseLoad()
+	if err != nil {
+		return err
+	}
+	err = a.parseProc()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (a *Analysis) parseReg() error {
+	path := filepath.Join(config.LogPath, a.Report.Request.ID, "reg.txt")
+	content, err := os.ReadFile(path)
+	if err != nil {
+		return err
+	}
+
+	modifiedContent := strings.ReplaceAll(string(content), `\`, `/`)
+	modifiedContent += "</Registry>"
+
+	var xmlData any
+	err = xml.Unmarshal([]byte(modifiedContent), &xmlData)
+	if err != nil {
+		return err
+	}
+
+	jsonData, err := json.Marshal(xmlData)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(jsonData, &a.Report.Process.WindowsRegisters)
+	if err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (a *Analysis) getLogByName(client *sftp.Client, local string, remote string) error {
-	remoteFile, err := client.Open(remote)
+func (a *Analysis) parseFS() error {
+	path := filepath.Join(config.LogPath, a.Report.Request.ID, "fs.txt")
+	content, err := os.ReadFile(path)
 	if err != nil {
-		return fmt.Errorf("failed to open remote file: %v", err)
-	}
-	defer remoteFile.Close()
-
-	if fi, _ := remoteFile.Stat(); fi.Size() < 1 {
-		return ErrFileEmpty
+		return err
 	}
 
-	localFile, err := os.Create(local)
+	modifiedContent := strings.ReplaceAll(string(content), `\`, `/`)
+	modifiedContent += "</FileSystem>"
+
+	var xmlData any
+	err = xml.Unmarshal([]byte(modifiedContent), &xmlData)
 	if err != nil {
-		return fmt.Errorf("failed to create local file: %v", err)
-	}
-	defer localFile.Close()
-
-	if _, err = remoteFile.WriteTo(localFile); err != nil {
-		return fmt.Errorf("failed to copy remote file to local: %v", err)
+		return err
 	}
 
-	if err = a.parseToJSON(local); err != nil {
+	jsonData, err := json.Marshal(xmlData)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(jsonData, &a.Report.Process.WindowsFS)
+	if err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (a *Analysis) parseToJSON(filename string) error {
-	content, err := os.ReadFile(filename)
+func (a *Analysis) parseLoad() error {
+	path := filepath.Join(config.LogPath, a.Report.Request.ID, "load.txt")
+	content, err := os.ReadFile(path)
 	if err != nil {
 		return err
 	}
 
-	if content[len(content)-3] != ']' {
-		// Substitute ',' by ']'.
-		content[len(content)-3] = ']'
+	modifiedContent := strings.ReplaceAll(string(content), `\`, `/`)
+	modifiedContent += "</LoadImage>"
+
+	var xmlData any
+	err = xml.Unmarshal([]byte(modifiedContent), &xmlData)
+	if err != nil {
+		return err
 	}
 
-	// Change from '\' to '/'.
-	modifiedContent := strings.ReplaceAll(string(content), "\\", "/")
+	jsonData, err := json.Marshal(xmlData)
+	if err != nil {
+		return err
+	}
 
-	switch filename {
-	case "/tmp/reg.json":
-		if err = json.Unmarshal([]byte(modifiedContent), &a.Report.Process.WindowsRegisters); err != nil {
-			return err
-		}
-	case "/tmp/fs.json":
-		if err = json.Unmarshal([]byte(modifiedContent), &a.Report.Process.WindowsFS); err != nil {
-			return err
-		}
-	case "/tmp/load.json":
-		if err = json.Unmarshal([]byte(modifiedContent), &a.Report.Process.WindowsBinariesLoaded); err != nil {
-			return err
-		}
-	case "/tmp/proc.json":
-		if err = json.Unmarshal([]byte(modifiedContent), &a.Report.Process.WindowsProcess); err != nil {
-			return err
-		}
-	default:
-		return errors.New("not a valid filename")
+	err = json.Unmarshal(jsonData, &a.Report.Process.WindowsBinariesLoaded)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (a *Analysis) parseProc() error {
+	path := filepath.Join(config.LogPath, a.Report.Request.ID, "proc.txt")
+	content, err := os.ReadFile(path)
+	if err != nil {
+		return err
+	}
+
+	modifiedContent := strings.ReplaceAll(string(content), `\`, `/`)
+	modifiedContent += "</Process>"
+
+	var xmlData any
+	err = xml.Unmarshal([]byte(modifiedContent), &xmlData)
+	if err != nil {
+		return err
+	}
+
+	jsonData, err := json.Marshal(xmlData)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(jsonData, &a.Report.Process.WindowsProcess)
+	if err != nil {
+		return err
 	}
 
 	return nil

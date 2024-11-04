@@ -81,7 +81,7 @@ type WindowsBinariesLoaded struct {
 	InfoType      string `json:"info_type"`
 	PID           string `json:"pid"`
 	FullImageName string `json:"full_image_name"`
-	Filename      string `json:"file_name"`
+	FileName      string `json:"file_name"`
 }
 
 type WindowsProcess struct {

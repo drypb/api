@@ -5,6 +5,7 @@ go 1.22.5
 toolchain go1.22.6
 
 require (
+	dagger.io/dagger v0.13.7
 	github.com/gabriel-vasile/mimetype v1.4.5
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/websocket v1.5.3
@@ -18,7 +19,6 @@ require (
 )
 
 require (
-	dagger.io/dagger v0.13.7 // indirect
 	github.com/99designs/gqlgen v0.17.55 // indirect
 	github.com/Khan/genqlient v0.7.0 // indirect
 	github.com/adrg/xdg v0.5.1 // indirect
