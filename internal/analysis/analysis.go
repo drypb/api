@@ -334,34 +334,40 @@ func (a *Analysis) getResults() error {
 
 func (a *Analysis) parseResults() error {
 	var err error
-	err = a.parseReg()
+	err = a.parse("reg.txt", &a.Report.Process.WindowsRegisters)
 	if err != nil {
 		return err
 	}
-	err = a.parseFS()
+	err = a.parse("fs.txt", &a.Report.Process.WindowsFS)
 	if err != nil {
 		return err
 	}
-	err = a.parseLoad()
+	err = a.parse("load.txt", &a.Report.Process.WindowsBinariesLoaded)
 	if err != nil {
 		return err
 	}
-	err = a.parseProc()
+	err = a.parse("proc.txt", &a.Report.Process.WindowsProcess)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (a *Analysis) parseReg() error {
-	path := filepath.Join(config.LogPath, a.Report.Request.ID, "reg.txt")
+func (a *Analysis) parse(filename string, whereToSave any) error {
+	path := filepath.Join(config.LogPath, a.Report.Request.ID, filename)
 	content, err := os.ReadFile(path)
 	if err != nil {
 		return err
 	}
 
 	modifiedContent := strings.ReplaceAll(string(content), `\`, `/`)
-	modifiedContent += "</Registry>"
+	ending := map[string]string{
+		"reg.txt":  "</Registry>",
+		"fs.txt":   "</FileSystem>",
+		"load.txt": "</LoadImage>",
+		"proc.txt": "</Process>",
+	}
+	modifiedContent += ending[filename]
 
 	var xmlData any
 	err = xml.Unmarshal([]byte(modifiedContent), &xmlData)
@@ -374,94 +380,7 @@ func (a *Analysis) parseReg() error {
 		return err
 	}
 
-	err = json.Unmarshal(jsonData, &a.Report.Process.WindowsRegisters)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (a *Analysis) parseFS() error {
-	path := filepath.Join(config.LogPath, a.Report.Request.ID, "fs.txt")
-	content, err := os.ReadFile(path)
-	if err != nil {
-		return err
-	}
-
-	modifiedContent := strings.ReplaceAll(string(content), `\`, `/`)
-	modifiedContent += "</FileSystem>"
-
-	var xmlData any
-	err = xml.Unmarshal([]byte(modifiedContent), &xmlData)
-	if err != nil {
-		return err
-	}
-
-	jsonData, err := json.Marshal(xmlData)
-	if err != nil {
-		return err
-	}
-
-	err = json.Unmarshal(jsonData, &a.Report.Process.WindowsFS)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (a *Analysis) parseLoad() error {
-	path := filepath.Join(config.LogPath, a.Report.Request.ID, "load.txt")
-	content, err := os.ReadFile(path)
-	if err != nil {
-		return err
-	}
-
-	modifiedContent := strings.ReplaceAll(string(content), `\`, `/`)
-	modifiedContent += "</LoadImage>"
-
-	var xmlData any
-	err = xml.Unmarshal([]byte(modifiedContent), &xmlData)
-	if err != nil {
-		return err
-	}
-
-	jsonData, err := json.Marshal(xmlData)
-	if err != nil {
-		return err
-	}
-
-	err = json.Unmarshal(jsonData, &a.Report.Process.WindowsBinariesLoaded)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (a *Analysis) parseProc() error {
-	path := filepath.Join(config.LogPath, a.Report.Request.ID, "proc.txt")
-	content, err := os.ReadFile(path)
-	if err != nil {
-		return err
-	}
-
-	modifiedContent := strings.ReplaceAll(string(content), `\`, `/`)
-	modifiedContent += "</Process>"
-
-	var xmlData any
-	err = xml.Unmarshal([]byte(modifiedContent), &xmlData)
-	if err != nil {
-		return err
-	}
-
-	jsonData, err := json.Marshal(xmlData)
-	if err != nil {
-		return err
-	}
-
-	err = json.Unmarshal(jsonData, &a.Report.Process.WindowsProcess)
+	err = json.Unmarshal(jsonData, whereToSave)
 	if err != nil {
 		return err
 	}
