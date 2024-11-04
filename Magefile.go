@@ -10,19 +10,19 @@ import (
 )
 
 func Build() error {
-	return sh.Run("go", "build", "-o", "bin/api", "./cmd/api")
+	return sh.RunV("go", "build", "-o", "bin/api", "./cmd/api")
 }
 
 func Test() error {
-	return sh.Run("go", "test", "./...")
+	return sh.RunV("go", "test", "./...")
 }
 
 func Clean() error {
-	return sh.Run("rm", "-rf", "bin")
+	return sh.RunV("rm", "-rf", "bin")
 }
 
 func Deploy() error {
-	err := sh.RunV("go", "run", "dagger.go")
+	err := sh.RunV("go", "run", "./scripts/dagger.go")
 	if err != nil {
 		return err
 	}
