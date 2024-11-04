@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/drypb/api/internal/data"
+	"github.com/drypb/api/internal/config"
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
 )
@@ -41,7 +41,7 @@ type Analysis struct {
 func New(header *multipart.FileHeader, id string, template int) (*Analysis, error) {
 	filename := header.Filename
 	ext := filepath.Ext(filename)
-	samplePath := filepath.Join(data.DefaultSamplePath, id+ext)
+	samplePath := filepath.Join(config.SamplePath, id+ext)
 	mimeType, err := getMimeType(samplePath)
 	if err != nil {
 		return nil, err
@@ -214,7 +214,7 @@ func (a *Analysis) runWithoutCtx() error {
 
 // SendSample uploads the malware sample to the virtual environment.
 func (a *Analysis) sendSample() error {
-	localPath := filepath.Join(data.DefaultSamplePath, a.Report.Request.ID+a.Report.Request.File.Extension)
+	localPath := filepath.Join(config.SamplePath, a.Report.Request.ID+a.Report.Request.File.Extension)
 	remotePath := "./sample" + a.Report.Request.File.Extension
 
 	sftpClient, err := sftp.NewClient(a.env.sshClient)
@@ -310,7 +310,7 @@ func (a *Analysis) getLog() error {
 	if err != nil {
 		return err
 	}
-	path := data.DefaultReportPath + "/" + a.Report.Request.ID + ".json"
+	path := config.ReportPath + "/" + a.Report.Request.ID + ".json"
 	if err = os.WriteFile(path, js, 0666); err != nil {
 		return err
 	}

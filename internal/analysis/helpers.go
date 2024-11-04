@@ -5,8 +5,8 @@ import (
 	"crypto/sha1"
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
 	"io"
-	"log"
 	"os"
 
 	"github.com/gabriel-vasile/mimetype"
@@ -101,7 +101,7 @@ func getDriverVersion(template int) string {
 func getFatalEnv(env string) string {
 	e := os.Getenv(env)
 	if e == "" {
-		log.Fatalf("%s is empty", e)
+		panic(fmt.Sprintf("%s is empty", e))
 	}
 	return e
 }

@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/drypb/api/internal/data"
+	"github.com/drypb/api/internal/config"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
@@ -33,17 +33,17 @@ var mockedReport = &Report{
 }
 
 func TestSaveReport(t *testing.T) {
-	err := os.Mkdir(data.DefaultReportPath, os.ModePerm)
+	err := os.Mkdir(config.ReportPath, os.ModePerm)
 	assert.Nil(t, err)
-	defer os.RemoveAll(data.DefaultReportPath)
+	defer os.RemoveAll(config.ReportPath)
 	err = mockedReport.saveReport()
 	assert.Nil(t, err)
 }
 
 func TestSaveStatus(t *testing.T) {
-	err := os.Mkdir(data.DefaultStatusPath, os.ModePerm)
+	err := os.Mkdir(config.StatusPath, os.ModePerm)
 	assert.Nil(t, err)
-	defer os.RemoveAll(data.DefaultStatusPath)
+	defer os.RemoveAll(config.StatusPath)
 	err = mockedReport.saveStatus()
 	assert.Nil(t, err)
 }
@@ -58,9 +58,9 @@ func TestSave(t *testing.T) {
 }
 
 func TestLoad(t *testing.T) {
-	err := os.Mkdir(data.DefaultReportPath, os.ModePerm)
+	err := os.Mkdir(config.ReportPath, os.ModePerm)
 	assert.Nil(t, err)
-	defer os.RemoveAll(data.DefaultReportPath)
+	defer os.RemoveAll(config.ReportPath)
 
 	err = mockedReport.Save("report")
 	assert.Nil(t, err)

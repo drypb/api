@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/drypb/api/internal/data"
+	"github.com/drypb/api/internal/config"
 	"github.com/gorilla/websocket"
 )
 
@@ -131,7 +131,7 @@ func (app *application) getStatusHandler(w http.ResponseWriter, r *http.Request)
 		lastMod = time.Unix(0, n)
 	}
 
-	path := filepath.Join(data.DefaultStatusPath, id+".json")
+	path := filepath.Join(config.StatusPath, id+".json")
 
 	go Writer(ws, path, lastMod)
 	Reader(ws)
