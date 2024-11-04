@@ -8,25 +8,25 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/drypb/api/internal/data"
+	"github.com/drypb/api/internal/config"
 )
 
 // Report represents the final artifact of the analysis process.
 type Report struct {
-	Request RequestMetadata `json:"requestMetadata"`
-	Process ProcessMetadata `json:"processMetadata"`
+	Request RequestMetadata `json:"request_metadata"`
+	Process ProcessMetadata `json:"process_metadata"`
 }
 
 type RequestMetadata struct {
 	Status        string       `json:"status"`
 	ID            string       `json:"id"`
-	DriverVersion string       `json:"driverVersion"`
-	TemplateID    int          `json:"templateID"`
-	StartTime     string       `json:"startTime"`
-	EndTime       string       `json:"endTime"`
+	DriverVersion string       `json:"driver_version"`
+	TemplateID    int          `json:"template_id"`
+	StartTime     string       `json:"start_time"`
+	EndTime       string       `json:"end_time"`
 	Log           []string     `json:"log"`
 	Error         string       `json:"error"`
-	File          FileMetadata `json:"fileMetadata"`
+	File          FileMetadata `json:"file_metadata"`
 }
 
 // Malware sample file information.
@@ -35,7 +35,7 @@ type FileMetadata struct {
 	Extension    string `json:"extension"`
 	MimeType     string `json:"mimetype"`
 	Size         int64  `json:"size"`
-	LastModified string `json:"lastModified"`
+	LastModified string `json:"last_modified"`
 	MD5Sum       string `json:"md5sum"`
 	SHA1Sum      string `json:"sha1sum"`
 	SHA256Sum    string `json:"sha256sum"`
@@ -43,64 +43,64 @@ type FileMetadata struct {
 
 // Malware process information
 type ProcessMetadata struct {
-	WindowsRegisters      []WindowsRegisters      `json:"reg"`
-	WindowsFS             []WindowsFileSystem     `json:"fs"`
-	WindowsBinariesLoaded []WindowsBinariesLoaded `json:"load"`
-	WindowsProcess        []WindowsProcess        `json:"proc"`
+	WindowsRegisters      []WindowsRegisters      `json:"windows_registers"`
+	WindowsFS             []WindowsFileSystem     `json:"windows_fs"`
+	WindowsBinariesLoaded []WindowsBinariesLoaded `json:"windows_binaries_loaded"`
+	WindowsProcess        []WindowsProcess        `json:"windows_process"`
 }
 
 type WindowsRegisters struct {
 	Date              string `json:"date"`
 	Time              string `json:"time"`
-	InfoType          string `json:"info type"`
-	RegistryOperation string `json:"registry operation"`
+	InfoType          string `json:"info_type"`
+	RegistryOperation string `json:"registry_operation"`
 	Name              string `json:"name"`
-	DataType          string `json:"data type"`
+	DataType          string `json:"data_type"`
 	Data              string `json:"data"`
 }
 
 type WindowsFileSystem struct {
 	Date            string              `json:"date"`
 	Time            string              `json:"time"`
-	InfoType        string              `json:"info type"`
-	MJFunc          string              `json:"mjFunc"`
+	InfoType        string              `json:"info_type"`
+	MJFunc          string              `json:"mj_func"`
 	PID             string              `json:"pid"`
 	TID             string              `json:"tid"`
 	SID             string              `json:"sid"`
-	TokenType       string              `json:"token type"`
+	TokenType       string              `json:"token_type"`
 	Privileges      []map[string]string `json:"privileges"`
-	ElevationStatus string              `json:"elevation status"`
-	ImageName       string              `json:"image name"`
+	ElevationStatus string              `json:"elevation_status"`
+	ImageName       string              `json:"image_name"`
 	Path            string              `json:"path"`
-	FileName        string              `json:"fileName"`
+	FileName        string              `json:"file_name"`
 }
 
 type WindowsBinariesLoaded struct {
 	Date          string `json:"date"`
 	Time          string `json:"time"`
-	InfoType      string `json:"info type"`
+	InfoType      string `json:"info_type"`
 	PID           string `json:"pid"`
-	FullImageName string `json:"full image name"`
-	Filename      string `json:"filename"`
+	FullImageName string `json:"full_image_name"`
+	Filename      string `json:"file_name"`
 }
 
 type WindowsProcess struct {
 	Date            string              `json:"date"`
 	Time            string              `json:"time"`
-	InfoType        string              `json:"info type"`
+	InfoType        string              `json:"info_type"`
 	PPID            string              `json:"ppid"`
 	PID             string              `json:"pid"`
 	Operation       string              `json:"operation"`
-	TokenType       string              `json:"token type"`
+	TokenType       string              `json:"token_type"`
 	Privileges      []map[string]string `json:"privileges"`
-	ElevationStatus string              `json:"elevation status"`
-	ParentName      string              `json:"parent name"`
-	ChildName       string              `json:"child name"`
+	ElevationStatus string              `json:"elevation_status"`
+	ParentName      string              `json:"parent_name"`
+	ChildName       string              `json:"child_name"`
 }
 
 // Load loads the report from the disk to the memory.
 func (r *Report) Load(id string) error {
-	path := filepath.Join(data.DefaultReportPath, id+".json")
+	path := filepath.Join(config.ReportPath, id+".json")
 
 	file, err := os.Open(path)
 	if err != nil {
@@ -134,7 +134,7 @@ func (r *Report) saveStatus() error {
 	if r.Request.ID == "" {
 		return errors.New("Analysis ID is not set")
 	}
-	statusPath := filepath.Join(data.DefaultStatusPath, r.Request.ID+".json")
+	statusPath := filepath.Join(config.StatusPath, r.Request.ID+".json")
 
 	file, err := os.Create(statusPath)
 	if err != nil {
@@ -155,7 +155,7 @@ func (r *Report) saveReport() error {
 	if r.Request.ID == "" {
 		return errors.New("Analysis ID is not set")
 	}
-	reportPath := filepath.Join(data.DefaultReportPath, r.Request.ID+".json")
+	reportPath := filepath.Join(config.ReportPath, r.Request.ID+".json")
 
 	file, err := os.Create(reportPath)
 	if err != nil {

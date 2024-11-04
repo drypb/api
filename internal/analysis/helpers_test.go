@@ -73,3 +73,22 @@ func TestGetSHA256Sum(t *testing.T) {
 	want := "ca7f87917e4f5029f81ec74d6711f1c587dca0fe91ec82b87bb77aeb15e6566d"
 	assert.Equal(t, got, want)
 }
+
+func TestGetFatalEnv(t *testing.T) {
+	t.Run("variable exists", func(t *testing.T) {
+		envName := "TEST_ENV"
+		envValue := "some_value"
+		os.Setenv(envName, envValue)
+		defer os.Unsetenv(envName)
+
+		got := getFatalEnv(envName)
+		want := envValue
+		assert.Equal(t, got, want)
+	})
+
+	t.Run("variable doesn't exists", func(t *testing.T) {
+		envName := "EMPTY_ENV"
+		os.Unsetenv(envName)
+		assert.Panics(t, func() { getFatalEnv(envName) })
+	})
+}

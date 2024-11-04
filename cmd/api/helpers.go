@@ -10,7 +10,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/drypb/api/internal/data"
+	"github.com/drypb/api/internal/config"
 	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
 )
@@ -110,10 +110,10 @@ func (app *application) readJSON(w http.ResponseWriter, r *http.Request, dst any
 
 func (app *application) createEssentialDirs() {
 	dirs := []string{
-		data.DefaultSamplePath,
-		data.DefaultReportPath,
-		data.DefaultLogPath,
-		data.DefaultStatusPath,
+		config.SamplePath,
+		config.ReportPath,
+		config.LogPath,
+		config.StatusPath,
 	}
 	for _, dir := range dirs {
 		err := os.MkdirAll(dir, os.ModePerm)

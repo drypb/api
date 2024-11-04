@@ -7,22 +7,20 @@ import (
 	"mime/multipart"
 
 	"github.com/drypb/api/internal/analysis"
+	"github.com/drypb/api/internal/config"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-func newQueue(cfg config) *queue {
-	conn, err := amqp.Dial(cfg.queue.url)
+func newQueue(cfg *config.Config) *amqp.Connection {
+	conn, err := amqp.Dial(cfg.Queue.URL)
 	if err != nil {
 		log.Fatal(err)
 	}
-	queue := queue{
-		conn: conn,
-	}
-	return &queue
+	return conn
 }
 
 func (app *application) consume() error {
-	ch, err := app.queue.conn.Channel()
+	ch, err := app.queue.Channel()
 	if err != nil {
 		return err
 	}

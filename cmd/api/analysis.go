@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/drypb/api/internal/data"
+	"github.com/drypb/api/internal/config"
 	"github.com/drypb/api/internal/validator"
 	"github.com/google/uuid"
 
@@ -46,7 +46,7 @@ func (app *application) startAnalysisHandler(w http.ResponseWriter, r *http.Requ
 	}
 
 	// Create file.
-	samplePath := filepath.Join(data.DefaultSamplePath, id+ext)
+	samplePath := filepath.Join(config.SamplePath, id+ext)
 	sample, err := os.Create(samplePath)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
@@ -61,7 +61,7 @@ func (app *application) startAnalysisHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	ch, err := app.queue.conn.Channel()
+	ch, err := app.queue.Channel()
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return

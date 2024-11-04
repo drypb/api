@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/drypb/api/internal/analysis"
-	"github.com/drypb/api/internal/data"
+	"github.com/drypb/api/internal/config"
 )
 
 // GetReportHandler returns the report of an analysis.
@@ -22,7 +22,7 @@ func (app *application) getReportHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	reportPath := filepath.Join(data.DefaultReportPath, id+".json")
+	reportPath := filepath.Join(config.ReportPath, id+".json")
 	report, err := os.Open(reportPath)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)

@@ -4,7 +4,6 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -12,40 +11,26 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/drypb/api/internal/config"
 	"github.com/drypb/api/internal/jsonlog"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 const version = "1.0.0"
 
-type config struct {
-	port  int
-	env   string
-	queue struct {
-		url        string
-		maxWorkers int
-	}
-}
-
-type queue struct {
-	conn *amqp.Connection
-}
-
 type application struct {
-	config config
+	config *config.Config
 	logger *jsonlog.Logger
-	queue  *queue
+	queue  *amqp.Connection
 }
 
 func main() {
-	var cfg config
-	flag.IntVar(&cfg.port, "port", 4000, "API server port")
-	flag.StringVar(&cfg.queue.url, "queueURL", os.Getenv("QUEUE_URL"), "Queue URL")
-	flag.IntVar(&cfg.queue.maxWorkers, "queueMaxWorkers", 10, "Maximum number of parallel workers")
-	flag.StringVar(&cfg.env, "env", "development", "Environment (development|staging|production)")
-	flag.Parse()
-
 	logger := jsonlog.New(os.Stdout, jsonlog.LevelInfo)
+
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		logger.PrintError(err, nil)
+	}
 
 	app := &application{
 		config: cfg,
@@ -54,7 +39,7 @@ func main() {
 	}
 
 	srv := &http.Server{
-		Addr:         fmt.Sprintf(":%d", cfg.port),
+		Addr:         fmt.Sprintf(":%d", cfg.Port),
 		Handler:      app.routes(),
 		ErrorLog:     log.New(logger, "", 0),
 		IdleTimeout:  time.Minute,
@@ -65,7 +50,7 @@ func main() {
 	app.createEssentialDirs()
 
 	// Spawn workers.
-	for range cfg.queue.maxWorkers {
+	for range cfg.Queue.MaxWorkers {
 		go func() {
 			err := app.consume()
 			if err != nil {
@@ -77,9 +62,9 @@ func main() {
 
 	logger.PrintInfo("starting server", map[string]string{
 		"addr":        srv.Addr,
-		"env":         cfg.env,
-		"max_workers": strconv.Itoa(cfg.queue.maxWorkers),
+		"env":         cfg.Env,
+		"max_workers": strconv.Itoa(cfg.Queue.MaxWorkers),
 	})
-	err := srv.ListenAndServe()
+	err = srv.ListenAndServe()
 	logger.PrintFatal(err, nil)
 }
