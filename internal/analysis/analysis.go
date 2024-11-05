@@ -360,7 +360,7 @@ func (a *Analysis) parseReg() error {
 	}
 
 	modifiedContent := strings.ReplaceAll(string(content), `\`, `/`)
-	modifiedContent += "</Registry>"
+	modifiedContent += "</registry>"
 
 	var Registry struct {
 		Log []struct {
@@ -407,7 +407,7 @@ func (a *Analysis) parseFS() error {
 	}
 
 	modifiedContent := strings.ReplaceAll(string(content), `\`, `/`)
-	modifiedContent += "</FileSystem>"
+	modifiedContent += "</file_system>"
 
 	var FileSystem struct {
 		Log []struct {
@@ -420,30 +420,10 @@ func (a *Analysis) parseFS() error {
 			SID        string `xml:"sid"`
 			TokenType  string `xml:"token_type"`
 			Privileges struct {
-				SeIncreaseQuotaPrivilege                  string `xml:"SeIncreaseQuotaPrivilege"`
-				SeSecurityPrivilege                       string `xml:"SeSecurityPrivilege"`
-				SeTakeOwnershipPrivilege                  string `xml:"SeTakeOwnershipPrivilege"`
-				SeLoadDriverPrivilege                     string `xml:"SeLoadDriverPrivilege"`
-				SeSystemProfilePrivilege                  string `xml:"SeSystemProfilePrivilege"`
-				SeSystemtimePrivilege                     string `xml:"SeSystemtimePrivilege"`
-				SeProfileSingleProcessPrivilege           string `xml:"SeProfileSingleProcessPrivilege"`
-				SeIncreaseBasePriorityPrivilege           string `xml:"SeIncreaseBasePriorityPrivilege"`
-				SeCreatePagefilePrivilege                 string `xml:"SeCreatePagefilePrivilege"`
-				SeBackupPrivilege                         string `xml:"SeBackupPrivilege"`
-				SeRestorePrivilege                        string `xml:"SeRestorePrivilege"`
-				SeShutdownPrivilege                       string `xml:"SeShutdownPrivilege"`
-				SeDebugPrivilege                          string `xml:"SeDebugPrivilege"`
-				SeSystemEnvironmentPrivilege              string `xml:"SeSystemEnvironmentPrivilege"`
-				SeChangeNotifyPrivilege                   string `xml:"SeChangeNotifyPrivilege"`
-				SeRemoteShutdownPrivilege                 string `xml:"SeRemoteShutdownPrivilege"`
-				SeUndockPrivilege                         string `xml:"SeUndockPrivilege"`
-				SeManageVolumePrivilege                   string `xml:"SeManageVolumePrivilege"`
-				SeImpersonatePrivilege                    string `xml:"SeImpersonatePrivilege"`
-				SeCreateGlobalPrivilege                   string `xml:"SeCreateGlobalPrivilege"`
-				SeIncreaseWorkingSetPrivilege             string `xml:"SeIncreaseWorkingSetPrivilege"`
-				SeTimeZonePrivilege                       string `xml:"SeTimeZonePrivilege"`
-				SeCreateSymbolicLinkPrivilege             string `xml:"SeCreateSymbolicLinkPrivilege"`
-				SeDelegateSessionUserImpersonatePrivilege string `xml:"SeDelegateSessionUserImpersonatePrivilege"`
+				Privilege []struct {
+					Name  string `xml:"name"`
+					Value string `xml:"value"`
+				} `xml:"privilege"`
 			} `xml:"privileges"`
 			ElevationStatus string `xml:"elevation_status"`
 			ImageName       string `xml:"image_name"`
@@ -457,41 +437,23 @@ func (a *Analysis) parseFS() error {
 	}
 
 	for _, entry := range FileSystem.Log {
+		var privileges []Privilege
+		for _, p := range entry.Privileges.Privilege {
+			privileges = append(privileges, Privilege{
+				Name:  p.Name,
+				Value: p.Value,
+			})
+		}
 		fs := WindowsFileSystem{
-			Date:      entry.Date,
-			Time:      entry.Time,
-			InfoType:  entry.InfoType,
-			MJFunc:    entry.MJFunc,
-			PID:       entry.PID,
-			TID:       entry.TID,
-			SID:       entry.SID,
-			TokenType: entry.TokenType,
-			Privileges: Privileges{
-				SeIncreaseQuotaPrivilege:                  entry.Privileges.SeIncreaseQuotaPrivilege,
-				SeSecurityPrivilege:                       entry.Privileges.SeSecurityPrivilege,
-				SeTakeOwnershipPrivilege:                  entry.Privileges.SeTakeOwnershipPrivilege,
-				SeLoadDriverPrivilege:                     entry.Privileges.SeLoadDriverPrivilege,
-				SeSystemProfilePrivilege:                  entry.Privileges.SeSystemProfilePrivilege,
-				SeSystemtimePrivilege:                     entry.Privileges.SeSystemtimePrivilege,
-				SeProfileSingleProcessPrivilege:           entry.Privileges.SeProfileSingleProcessPrivilege,
-				SeIncreaseBasePriorityPrivilege:           entry.Privileges.SeIncreaseBasePriorityPrivilege,
-				SeCreatePagefilePrivilege:                 entry.Privileges.SeCreatePagefilePrivilege,
-				SeBackupPrivilege:                         entry.Privileges.SeBackupPrivilege,
-				SeRestorePrivilege:                        entry.Privileges.SeRestorePrivilege,
-				SeShutdownPrivilege:                       entry.Privileges.SeShutdownPrivilege,
-				SeDebugPrivilege:                          entry.Privileges.SeDebugPrivilege,
-				SeSystemEnvironmentPrivilege:              entry.Privileges.SeSystemEnvironmentPrivilege,
-				SeChangeNotifyPrivilege:                   entry.Privileges.SeChangeNotifyPrivilege,
-				SeRemoteShutdownPrivilege:                 entry.Privileges.SeRemoteShutdownPrivilege,
-				SeUndockPrivilege:                         entry.Privileges.SeUndockPrivilege,
-				SeManageVolumePrivilege:                   entry.Privileges.SeManageVolumePrivilege,
-				SeImpersonatePrivilege:                    entry.Privileges.SeImpersonatePrivilege,
-				SeCreateGlobalPrivilege:                   entry.Privileges.SeCreateGlobalPrivilege,
-				SeIncreaseWorkingSetPrivilege:             entry.Privileges.SeIncreaseWorkingSetPrivilege,
-				SeTimeZonePrivilege:                       entry.Privileges.SeTimeZonePrivilege,
-				SeCreateSymbolicLinkPrivilege:             entry.Privileges.SeCreateSymbolicLinkPrivilege,
-				SeDelegateSessionUserImpersonatePrivilege: entry.Privileges.SeDelegateSessionUserImpersonatePrivilege,
-			},
+			Date:            entry.Date,
+			Time:            entry.Time,
+			InfoType:        entry.InfoType,
+			MJFunc:          entry.MJFunc,
+			PID:             entry.PID,
+			TID:             entry.TID,
+			SID:             entry.SID,
+			TokenType:       entry.TokenType,
+			Privileges:      privileges,
 			ElevationStatus: entry.ElevationStatus,
 			ImageName:       entry.ImageName,
 			Path:            entry.Path,
@@ -516,7 +478,7 @@ func (a *Analysis) parseLoad() error {
 	}
 
 	modifiedContent := strings.ReplaceAll(string(content), `\`, `/`)
-	modifiedContent += "</LoadImage>"
+	modifiedContent += "</load_image>"
 
 	var LoadImage struct {
 		Log []struct {
@@ -561,7 +523,7 @@ func (a *Analysis) parseProc() error {
 	}
 
 	modifiedContent := strings.ReplaceAll(string(content), `\`, `/`)
-	modifiedContent += "</Process>"
+	modifiedContent += "</process>"
 
 	var Process struct {
 		Log []struct {
@@ -573,30 +535,10 @@ func (a *Analysis) parseProc() error {
 			Operation  string `xml:"operation"`
 			TokenType  string `xml:"token_type"`
 			Privileges struct {
-				SeIncreaseQuotaPrivilege                  string `xml:"SeIncreaseQuotaPrivilege"`
-				SeSecurityPrivilege                       string `xml:"SeSecurityPrivilege"`
-				SeTakeOwnershipPrivilege                  string `xml:"SeTakeOwnershipPrivilege"`
-				SeLoadDriverPrivilege                     string `xml:"SeLoadDriverPrivilege"`
-				SeSystemProfilePrivilege                  string `xml:"SeSystemProfilePrivilege"`
-				SeSystemtimePrivilege                     string `xml:"SeSystemtimePrivilege"`
-				SeProfileSingleProcessPrivilege           string `xml:"SeProfileSingleProcessPrivilege"`
-				SeIncreaseBasePriorityPrivilege           string `xml:"SeIncreaseBasePriorityPrivilege"`
-				SeCreatePagefilePrivilege                 string `xml:"SeCreatePagefilePrivilege"`
-				SeBackupPrivilege                         string `xml:"SeBackupPrivilege"`
-				SeRestorePrivilege                        string `xml:"SeRestorePrivilege"`
-				SeShutdownPrivilege                       string `xml:"SeShutdownPrivilege"`
-				SeDebugPrivilege                          string `xml:"SeDebugPrivilege"`
-				SeSystemEnvironmentPrivilege              string `xml:"SeSystemEnvironmentPrivilege"`
-				SeChangeNotifyPrivilege                   string `xml:"SeChangeNotifyPrivilege"`
-				SeRemoteShutdownPrivilege                 string `xml:"SeRemoteShutdownPrivilege"`
-				SeUndockPrivilege                         string `xml:"SeUndockPrivilege"`
-				SeManageVolumePrivilege                   string `xml:"SeManageVolumePrivilege"`
-				SeImpersonatePrivilege                    string `xml:"SeImpersonatePrivilege"`
-				SeCreateGlobalPrivilege                   string `xml:"SeCreateGlobalPrivilege"`
-				SeIncreaseWorkingSetPrivilege             string `xml:"SeIncreaseWorkingSetPrivilege"`
-				SeTimeZonePrivilege                       string `xml:"SeTimeZonePrivilege"`
-				SeCreateSymbolicLinkPrivilege             string `xml:"SeCreateSymbolicLinkPrivilege"`
-				SeDelegateSessionUserImpersonatePrivilege string `xml:"SeDelegateSessionUserImpersonatePrivilege"`
+				Privilege []struct {
+					Name  string `xml:"name"`
+					Value string `xml:"value"`
+				} `xml:"privilege"`
 			} `xml:"privileges"`
 			ElevationStatus string `xml:"elevation_status"`
 			ParentName      string `xml:"parent_name"`
@@ -609,40 +551,22 @@ func (a *Analysis) parseProc() error {
 	}
 
 	for _, entry := range Process.Log {
+		var privileges []Privilege
+		for _, p := range entry.Privileges.Privilege {
+			privileges = append(privileges, Privilege{
+				Name:  p.Name,
+				Value: p.Value,
+			})
+		}
 		proc := WindowsProcess{
-			Date:      entry.Date,
-			Time:      entry.Time,
-			InfoType:  entry.InfoType,
-			PPID:      entry.PPID,
-			PID:       entry.PID,
-			Operation: entry.Operation,
-			TokenType: entry.TokenType,
-			Privileges: Privileges{
-				SeIncreaseQuotaPrivilege:                  entry.Privileges.SeIncreaseQuotaPrivilege,
-				SeSecurityPrivilege:                       entry.Privileges.SeSecurityPrivilege,
-				SeTakeOwnershipPrivilege:                  entry.Privileges.SeTakeOwnershipPrivilege,
-				SeLoadDriverPrivilege:                     entry.Privileges.SeLoadDriverPrivilege,
-				SeSystemProfilePrivilege:                  entry.Privileges.SeSystemProfilePrivilege,
-				SeSystemtimePrivilege:                     entry.Privileges.SeSystemtimePrivilege,
-				SeProfileSingleProcessPrivilege:           entry.Privileges.SeProfileSingleProcessPrivilege,
-				SeIncreaseBasePriorityPrivilege:           entry.Privileges.SeIncreaseBasePriorityPrivilege,
-				SeCreatePagefilePrivilege:                 entry.Privileges.SeCreatePagefilePrivilege,
-				SeBackupPrivilege:                         entry.Privileges.SeBackupPrivilege,
-				SeRestorePrivilege:                        entry.Privileges.SeRestorePrivilege,
-				SeShutdownPrivilege:                       entry.Privileges.SeShutdownPrivilege,
-				SeDebugPrivilege:                          entry.Privileges.SeDebugPrivilege,
-				SeSystemEnvironmentPrivilege:              entry.Privileges.SeSystemEnvironmentPrivilege,
-				SeChangeNotifyPrivilege:                   entry.Privileges.SeChangeNotifyPrivilege,
-				SeRemoteShutdownPrivilege:                 entry.Privileges.SeRemoteShutdownPrivilege,
-				SeUndockPrivilege:                         entry.Privileges.SeUndockPrivilege,
-				SeManageVolumePrivilege:                   entry.Privileges.SeManageVolumePrivilege,
-				SeImpersonatePrivilege:                    entry.Privileges.SeImpersonatePrivilege,
-				SeCreateGlobalPrivilege:                   entry.Privileges.SeCreateGlobalPrivilege,
-				SeIncreaseWorkingSetPrivilege:             entry.Privileges.SeIncreaseWorkingSetPrivilege,
-				SeTimeZonePrivilege:                       entry.Privileges.SeTimeZonePrivilege,
-				SeCreateSymbolicLinkPrivilege:             entry.Privileges.SeCreateSymbolicLinkPrivilege,
-				SeDelegateSessionUserImpersonatePrivilege: entry.Privileges.SeDelegateSessionUserImpersonatePrivilege,
-			},
+			Date:            entry.Date,
+			Time:            entry.Time,
+			InfoType:        entry.InfoType,
+			PPID:            entry.PPID,
+			PID:             entry.PID,
+			Operation:       entry.Operation,
+			TokenType:       entry.TokenType,
+			Privileges:      privileges,
 			ElevationStatus: entry.ElevationStatus,
 			ParentName:      entry.ParentName,
 			ChildName:       entry.ChildName,

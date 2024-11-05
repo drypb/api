@@ -59,47 +59,25 @@ type WindowsRegisters struct {
 	Data              string `json:"data"`
 }
 
-type Privileges struct {
-	SeIncreaseQuotaPrivilege                  string `json:"SeIncreaseQuotaPrivilege"`
-	SeSecurityPrivilege                       string `json:"SeSecurityPrivilege"`
-	SeTakeOwnershipPrivilege                  string `json:"SeTakeOwnershipPrivilege"`
-	SeLoadDriverPrivilege                     string `json:"SeLoadDriverPrivilege"`
-	SeSystemProfilePrivilege                  string `json:"SeSystemProfilePrivilege"`
-	SeSystemtimePrivilege                     string `json:"SeSystemtimePrivilege"`
-	SeProfileSingleProcessPrivilege           string `json:"SeProfileSingleProcessPrivilege"`
-	SeIncreaseBasePriorityPrivilege           string `json:"SeIncreaseBasePriorityPrivilege"`
-	SeCreatePagefilePrivilege                 string `json:"SeCreatePagefilePrivilege"`
-	SeBackupPrivilege                         string `json:"SeBackupPrivilege"`
-	SeRestorePrivilege                        string `json:"SeRestorePrivilege"`
-	SeShutdownPrivilege                       string `json:"SeShutdownPrivilege"`
-	SeDebugPrivilege                          string `json:"SeDebugPrivilege"`
-	SeSystemEnvironmentPrivilege              string `json:"SeSystemEnvironmentPrivilege"`
-	SeChangeNotifyPrivilege                   string `json:"SeChangeNotifyPrivilege"`
-	SeRemoteShutdownPrivilege                 string `json:"SeRemoteShutdownPrivilege"`
-	SeUndockPrivilege                         string `json:"SeUndockPrivilege"`
-	SeManageVolumePrivilege                   string `json:"SeManageVolumePrivilege"`
-	SeImpersonatePrivilege                    string `json:"SeImpersonatePrivilege"`
-	SeCreateGlobalPrivilege                   string `json:"SeCreateGlobalPrivilege"`
-	SeIncreaseWorkingSetPrivilege             string `json:"SeIncreaseWorkingSetPrivilege"`
-	SeTimeZonePrivilege                       string `json:"SeTimeZonePrivilege"`
-	SeCreateSymbolicLinkPrivilege             string `json:"SeCreateSymbolicLinkPrivilege"`
-	SeDelegateSessionUserImpersonatePrivilege string `json:"SeDelegateSessionUserImpersonatePrivilege"`
+type Privilege struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
 }
 
 type WindowsFileSystem struct {
-	Date            string     `json:"date"`
-	Time            string     `json:"time"`
-	InfoType        string     `json:"info_type"`
-	MJFunc          string     `json:"mj_func"`
-	PID             string     `json:"pid"`
-	TID             string     `json:"tid"`
-	SID             string     `json:"sid"`
-	TokenType       string     `json:"token_type"`
-	Privileges      Privileges `json:"privileges"`
-	ElevationStatus string     `json:"elevation_status"`
-	ImageName       string     `json:"image_name"`
-	Path            string     `json:"path"`
-	FileName        string     `json:"file_name"`
+	Date            string      `json:"date"`
+	Time            string      `json:"time"`
+	InfoType        string      `json:"info_type"`
+	MJFunc          string      `json:"mj_func"`
+	PID             string      `json:"pid"`
+	TID             string      `json:"tid"`
+	SID             string      `json:"sid"`
+	TokenType       string      `json:"token_type"`
+	Privileges      []Privilege `json:"privileges"`
+	ElevationStatus string      `json:"elevation_status"`
+	ImageName       string      `json:"image_name"`
+	Path            string      `json:"path"`
+	FileName        string      `json:"file_name"`
 }
 
 type WindowsBinariesLoaded struct {
@@ -112,17 +90,17 @@ type WindowsBinariesLoaded struct {
 }
 
 type WindowsProcess struct {
-	Date            string     `json:"date"`
-	Time            string     `json:"time"`
-	InfoType        string     `json:"info_type"`
-	PPID            string     `json:"ppid"`
-	PID             string     `json:"pid"`
-	Operation       string     `json:"operation"`
-	TokenType       string     `json:"token_type"`
-	Privileges      Privileges `json:"privileges"`
-	ElevationStatus string     `json:"elevation_status"`
-	ParentName      string     `json:"parent_name"`
-	ChildName       string     `json:"child_name"`
+	Date            string      `json:"date"`
+	Time            string      `json:"time"`
+	InfoType        string      `json:"info_type"`
+	PPID            string      `json:"ppid"`
+	PID             string      `json:"pid"`
+	Operation       string      `json:"operation"`
+	TokenType       string      `json:"token_type"`
+	Privileges      []Privilege `json:"privileges"`
+	ElevationStatus string      `json:"elevation_status"`
+	ParentName      string      `json:"parent_name"`
+	ChildName       string      `json:"child_name"`
 }
 
 // Load loads the report from the disk to the memory.
