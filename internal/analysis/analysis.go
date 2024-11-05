@@ -3,7 +3,6 @@ package analysis
 
 import (
 	"context"
-	"encoding/json"
 	"encoding/xml"
 	"errors"
 	"fmt"
@@ -189,6 +188,7 @@ func (a *Analysis) runWithoutCtx() error {
 	if err != nil {
 		return err
 	}
+	a.env.sshClient.Close()
 	a.Report.LogThis("Results retrieved")
 
 	err = a.parseResults()
@@ -305,12 +305,6 @@ func (a *Analysis) getResults() error {
 		}
 		defer remoteFile.Close()
 
-		fi, _ := remoteFile.Stat()
-		if fi.Size() < 1 {
-			log.Println(ErrFileEmpty)
-			//return ErrFileEmpty
-		}
-
 		logIDDir := filepath.Join(config.LogPath, a.Report.Request.ID)
 		err = os.MkdirAll(logIDDir, 0750)
 		if err != nil {
@@ -334,55 +328,326 @@ func (a *Analysis) getResults() error {
 
 func (a *Analysis) parseResults() error {
 	var err error
-	err = a.parse("reg.txt", &a.Report.Process.WindowsRegisters)
+	err = a.parseReg()
 	if err != nil {
 		return err
 	}
-	err = a.parse("fs.txt", &a.Report.Process.WindowsFS)
+	err = a.parseFS()
 	if err != nil {
 		return err
 	}
-	err = a.parse("load.txt", &a.Report.Process.WindowsBinariesLoaded)
+	err = a.parseLoad()
 	if err != nil {
 		return err
 	}
-	err = a.parse("proc.txt", &a.Report.Process.WindowsProcess)
+	err = a.parseProc()
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (a *Analysis) parse(filename string, whereToSave any) error {
-	path := filepath.Join(config.LogPath, a.Report.Request.ID, filename)
+func (a *Analysis) parseReg() error {
+	path := filepath.Join(config.LogPath, a.Report.Request.ID, "reg.txt")
 	content, err := os.ReadFile(path)
 	if err != nil {
 		return err
 	}
 
+	if len(content) == 0 {
+		log.Println("reg.txt empty")
+		return nil
+	}
+
 	modifiedContent := strings.ReplaceAll(string(content), `\`, `/`)
-	ending := map[string]string{
-		"reg.txt":  "</Registry>",
-		"fs.txt":   "</FileSystem>",
-		"load.txt": "</LoadImage>",
-		"proc.txt": "</Process>",
-	}
-	modifiedContent += ending[filename]
+	modifiedContent += "</Registry>"
 
-	var xmlData any
-	err = xml.Unmarshal([]byte(modifiedContent), &xmlData)
+	var Registry struct {
+		Log []struct {
+			Date              string `xml:"date"`
+			Time              string `xml:"time"`
+			InfoType          string `xml:"info_type"`
+			RegistryOperation string `xml:"registry_operation"`
+			Name              string `xml:"name"`
+			DataType          string `xml:"data_type"`
+			Data              string `xml:"data"`
+		} `xml:"log"`
+	}
+	err = xml.Unmarshal([]byte(modifiedContent), &Registry)
 	if err != nil {
 		return err
 	}
 
-	jsonData, err := json.Marshal(xmlData)
+	for _, entry := range Registry.Log {
+		register := WindowsRegisters{
+			Date:              entry.Date,
+			Time:              entry.Time,
+			InfoType:          entry.InfoType,
+			RegistryOperation: entry.RegistryOperation,
+			Name:              entry.Name,
+			DataType:          entry.DataType,
+			Data:              entry.Data,
+		}
+		a.Report.Process.WindowsRegisters = append(a.Report.Process.WindowsRegisters, register)
+	}
+
+	return nil
+}
+
+func (a *Analysis) parseFS() error {
+	path := filepath.Join(config.LogPath, a.Report.Request.ID, "fs.txt")
+	content, err := os.ReadFile(path)
 	if err != nil {
 		return err
 	}
 
-	err = json.Unmarshal(jsonData, whereToSave)
+	if len(content) == 0 {
+		log.Println("fs.txt empty")
+		return nil
+	}
+
+	modifiedContent := strings.ReplaceAll(string(content), `\`, `/`)
+	modifiedContent += "</FileSystem>"
+
+	var FileSystem struct {
+		Log []struct {
+			Date       string `xml:"date"`
+			Time       string `xml:"time"`
+			InfoType   string `xml:"info_type"`
+			MJFunc     string `xml:"mj_func"`
+			PID        string `xml:"pid"`
+			TID        string `xml:"tid"`
+			SID        string `xml:"sid"`
+			TokenType  string `xml:"token_type"`
+			Privileges struct {
+				SeIncreaseQuotaPrivilege                  string `xml:"SeIncreaseQuotaPrivilege"`
+				SeSecurityPrivilege                       string `xml:"SeSecurityPrivilege"`
+				SeTakeOwnershipPrivilege                  string `xml:"SeTakeOwnershipPrivilege"`
+				SeLoadDriverPrivilege                     string `xml:"SeLoadDriverPrivilege"`
+				SeSystemProfilePrivilege                  string `xml:"SeSystemProfilePrivilege"`
+				SeSystemtimePrivilege                     string `xml:"SeSystemtimePrivilege"`
+				SeProfileSingleProcessPrivilege           string `xml:"SeProfileSingleProcessPrivilege"`
+				SeIncreaseBasePriorityPrivilege           string `xml:"SeIncreaseBasePriorityPrivilege"`
+				SeCreatePagefilePrivilege                 string `xml:"SeCreatePagefilePrivilege"`
+				SeBackupPrivilege                         string `xml:"SeBackupPrivilege"`
+				SeRestorePrivilege                        string `xml:"SeRestorePrivilege"`
+				SeShutdownPrivilege                       string `xml:"SeShutdownPrivilege"`
+				SeDebugPrivilege                          string `xml:"SeDebugPrivilege"`
+				SeSystemEnvironmentPrivilege              string `xml:"SeSystemEnvironmentPrivilege"`
+				SeChangeNotifyPrivilege                   string `xml:"SeChangeNotifyPrivilege"`
+				SeRemoteShutdownPrivilege                 string `xml:"SeRemoteShutdownPrivilege"`
+				SeUndockPrivilege                         string `xml:"SeUndockPrivilege"`
+				SeManageVolumePrivilege                   string `xml:"SeManageVolumePrivilege"`
+				SeImpersonatePrivilege                    string `xml:"SeImpersonatePrivilege"`
+				SeCreateGlobalPrivilege                   string `xml:"SeCreateGlobalPrivilege"`
+				SeIncreaseWorkingSetPrivilege             string `xml:"SeIncreaseWorkingSetPrivilege"`
+				SeTimeZonePrivilege                       string `xml:"SeTimeZonePrivilege"`
+				SeCreateSymbolicLinkPrivilege             string `xml:"SeCreateSymbolicLinkPrivilege"`
+				SeDelegateSessionUserImpersonatePrivilege string `xml:"SeDelegateSessionUserImpersonatePrivilege"`
+			} `xml:"privileges"`
+			ElevationStatus string `xml:"elevation_status"`
+			ImageName       string `xml:"image_name"`
+			Path            string `xml:"path"`
+			FileName        string `xml:"file_name"`
+		} `xml:"log"`
+	}
+	err = xml.Unmarshal([]byte(modifiedContent), &FileSystem)
 	if err != nil {
 		return err
+	}
+
+	for _, entry := range FileSystem.Log {
+		fs := WindowsFileSystem{
+			Date:      entry.Date,
+			Time:      entry.Time,
+			InfoType:  entry.InfoType,
+			MJFunc:    entry.MJFunc,
+			PID:       entry.PID,
+			TID:       entry.TID,
+			SID:       entry.SID,
+			TokenType: entry.TokenType,
+			Privileges: Privileges{
+				SeIncreaseQuotaPrivilege:                  entry.Privileges.SeIncreaseQuotaPrivilege,
+				SeSecurityPrivilege:                       entry.Privileges.SeSecurityPrivilege,
+				SeTakeOwnershipPrivilege:                  entry.Privileges.SeTakeOwnershipPrivilege,
+				SeLoadDriverPrivilege:                     entry.Privileges.SeLoadDriverPrivilege,
+				SeSystemProfilePrivilege:                  entry.Privileges.SeSystemProfilePrivilege,
+				SeSystemtimePrivilege:                     entry.Privileges.SeSystemtimePrivilege,
+				SeProfileSingleProcessPrivilege:           entry.Privileges.SeProfileSingleProcessPrivilege,
+				SeIncreaseBasePriorityPrivilege:           entry.Privileges.SeIncreaseBasePriorityPrivilege,
+				SeCreatePagefilePrivilege:                 entry.Privileges.SeCreatePagefilePrivilege,
+				SeBackupPrivilege:                         entry.Privileges.SeBackupPrivilege,
+				SeRestorePrivilege:                        entry.Privileges.SeRestorePrivilege,
+				SeShutdownPrivilege:                       entry.Privileges.SeShutdownPrivilege,
+				SeDebugPrivilege:                          entry.Privileges.SeDebugPrivilege,
+				SeSystemEnvironmentPrivilege:              entry.Privileges.SeSystemEnvironmentPrivilege,
+				SeChangeNotifyPrivilege:                   entry.Privileges.SeChangeNotifyPrivilege,
+				SeRemoteShutdownPrivilege:                 entry.Privileges.SeRemoteShutdownPrivilege,
+				SeUndockPrivilege:                         entry.Privileges.SeUndockPrivilege,
+				SeManageVolumePrivilege:                   entry.Privileges.SeManageVolumePrivilege,
+				SeImpersonatePrivilege:                    entry.Privileges.SeImpersonatePrivilege,
+				SeCreateGlobalPrivilege:                   entry.Privileges.SeCreateGlobalPrivilege,
+				SeIncreaseWorkingSetPrivilege:             entry.Privileges.SeIncreaseWorkingSetPrivilege,
+				SeTimeZonePrivilege:                       entry.Privileges.SeTimeZonePrivilege,
+				SeCreateSymbolicLinkPrivilege:             entry.Privileges.SeCreateSymbolicLinkPrivilege,
+				SeDelegateSessionUserImpersonatePrivilege: entry.Privileges.SeDelegateSessionUserImpersonatePrivilege,
+			},
+			ElevationStatus: entry.ElevationStatus,
+			ImageName:       entry.ImageName,
+			Path:            entry.Path,
+			FileName:        entry.FileName,
+		}
+		a.Report.Process.WindowsFS = append(a.Report.Process.WindowsFS, fs)
+	}
+
+	return nil
+}
+
+func (a *Analysis) parseLoad() error {
+	path := filepath.Join(config.LogPath, a.Report.Request.ID, "load.txt")
+	content, err := os.ReadFile(path)
+	if err != nil {
+		return err
+	}
+
+	if len(content) == 0 {
+		log.Println("load.txt empty")
+		return nil
+	}
+
+	modifiedContent := strings.ReplaceAll(string(content), `\`, `/`)
+	modifiedContent += "</LoadImage>"
+
+	var LoadImage struct {
+		Log []struct {
+			Date          string `xml:"date"`
+			Time          string `xml:"time"`
+			InfoType      string `xml:"info_type"`
+			PID           string `xml:"pid"`
+			FullImageName string `xml:"full_image_name"`
+			FileName      string `xml:"file_name"`
+		} `xml:"log"`
+	}
+	err = xml.Unmarshal([]byte(modifiedContent), &LoadImage)
+	if err != nil {
+		return err
+	}
+
+	for _, entry := range LoadImage.Log {
+		binaryLoaded := WindowsBinariesLoaded{
+			Date:          entry.Date,
+			Time:          entry.Time,
+			InfoType:      entry.InfoType,
+			PID:           entry.PID,
+			FullImageName: entry.FullImageName,
+			FileName:      entry.FileName,
+		}
+		a.Report.Process.WindowsBinariesLoaded = append(a.Report.Process.WindowsBinariesLoaded, binaryLoaded)
+	}
+
+	return nil
+}
+
+func (a *Analysis) parseProc() error {
+	path := filepath.Join(config.LogPath, a.Report.Request.ID, "proc.txt")
+	content, err := os.ReadFile(path)
+	if err != nil {
+		return err
+	}
+
+	if len(content) == 0 {
+		log.Println("proc.txt empty")
+		return nil
+	}
+
+	modifiedContent := strings.ReplaceAll(string(content), `\`, `/`)
+	modifiedContent += "</Process>"
+
+	var Process struct {
+		Log []struct {
+			Date       string `xml:"date"`
+			Time       string `xml:"time"`
+			InfoType   string `xml:"info_type"`
+			PPID       string `xml:"ppid"`
+			PID        string `xml:"pid"`
+			Operation  string `xml:"operation"`
+			TokenType  string `xml:"token_type"`
+			Privileges struct {
+				SeIncreaseQuotaPrivilege                  string `xml:"SeIncreaseQuotaPrivilege"`
+				SeSecurityPrivilege                       string `xml:"SeSecurityPrivilege"`
+				SeTakeOwnershipPrivilege                  string `xml:"SeTakeOwnershipPrivilege"`
+				SeLoadDriverPrivilege                     string `xml:"SeLoadDriverPrivilege"`
+				SeSystemProfilePrivilege                  string `xml:"SeSystemProfilePrivilege"`
+				SeSystemtimePrivilege                     string `xml:"SeSystemtimePrivilege"`
+				SeProfileSingleProcessPrivilege           string `xml:"SeProfileSingleProcessPrivilege"`
+				SeIncreaseBasePriorityPrivilege           string `xml:"SeIncreaseBasePriorityPrivilege"`
+				SeCreatePagefilePrivilege                 string `xml:"SeCreatePagefilePrivilege"`
+				SeBackupPrivilege                         string `xml:"SeBackupPrivilege"`
+				SeRestorePrivilege                        string `xml:"SeRestorePrivilege"`
+				SeShutdownPrivilege                       string `xml:"SeShutdownPrivilege"`
+				SeDebugPrivilege                          string `xml:"SeDebugPrivilege"`
+				SeSystemEnvironmentPrivilege              string `xml:"SeSystemEnvironmentPrivilege"`
+				SeChangeNotifyPrivilege                   string `xml:"SeChangeNotifyPrivilege"`
+				SeRemoteShutdownPrivilege                 string `xml:"SeRemoteShutdownPrivilege"`
+				SeUndockPrivilege                         string `xml:"SeUndockPrivilege"`
+				SeManageVolumePrivilege                   string `xml:"SeManageVolumePrivilege"`
+				SeImpersonatePrivilege                    string `xml:"SeImpersonatePrivilege"`
+				SeCreateGlobalPrivilege                   string `xml:"SeCreateGlobalPrivilege"`
+				SeIncreaseWorkingSetPrivilege             string `xml:"SeIncreaseWorkingSetPrivilege"`
+				SeTimeZonePrivilege                       string `xml:"SeTimeZonePrivilege"`
+				SeCreateSymbolicLinkPrivilege             string `xml:"SeCreateSymbolicLinkPrivilege"`
+				SeDelegateSessionUserImpersonatePrivilege string `xml:"SeDelegateSessionUserImpersonatePrivilege"`
+			} `xml:"privileges"`
+			ElevationStatus string `xml:"elevation_status"`
+			ParentName      string `xml:"parent_name"`
+			ChildName       string `xml:"child_name"`
+		} `xml:"log"`
+	}
+	err = xml.Unmarshal([]byte(modifiedContent), &a.Report.Process.WindowsProcess)
+	if err != nil {
+		return err
+	}
+
+	for _, entry := range Process.Log {
+		proc := WindowsProcess{
+			Date:      entry.Date,
+			Time:      entry.Time,
+			InfoType:  entry.InfoType,
+			PPID:      entry.PPID,
+			PID:       entry.PID,
+			Operation: entry.Operation,
+			TokenType: entry.TokenType,
+			Privileges: Privileges{
+				SeIncreaseQuotaPrivilege:                  entry.Privileges.SeIncreaseQuotaPrivilege,
+				SeSecurityPrivilege:                       entry.Privileges.SeSecurityPrivilege,
+				SeTakeOwnershipPrivilege:                  entry.Privileges.SeTakeOwnershipPrivilege,
+				SeLoadDriverPrivilege:                     entry.Privileges.SeLoadDriverPrivilege,
+				SeSystemProfilePrivilege:                  entry.Privileges.SeSystemProfilePrivilege,
+				SeSystemtimePrivilege:                     entry.Privileges.SeSystemtimePrivilege,
+				SeProfileSingleProcessPrivilege:           entry.Privileges.SeProfileSingleProcessPrivilege,
+				SeIncreaseBasePriorityPrivilege:           entry.Privileges.SeIncreaseBasePriorityPrivilege,
+				SeCreatePagefilePrivilege:                 entry.Privileges.SeCreatePagefilePrivilege,
+				SeBackupPrivilege:                         entry.Privileges.SeBackupPrivilege,
+				SeRestorePrivilege:                        entry.Privileges.SeRestorePrivilege,
+				SeShutdownPrivilege:                       entry.Privileges.SeShutdownPrivilege,
+				SeDebugPrivilege:                          entry.Privileges.SeDebugPrivilege,
+				SeSystemEnvironmentPrivilege:              entry.Privileges.SeSystemEnvironmentPrivilege,
+				SeChangeNotifyPrivilege:                   entry.Privileges.SeChangeNotifyPrivilege,
+				SeRemoteShutdownPrivilege:                 entry.Privileges.SeRemoteShutdownPrivilege,
+				SeUndockPrivilege:                         entry.Privileges.SeUndockPrivilege,
+				SeManageVolumePrivilege:                   entry.Privileges.SeManageVolumePrivilege,
+				SeImpersonatePrivilege:                    entry.Privileges.SeImpersonatePrivilege,
+				SeCreateGlobalPrivilege:                   entry.Privileges.SeCreateGlobalPrivilege,
+				SeIncreaseWorkingSetPrivilege:             entry.Privileges.SeIncreaseWorkingSetPrivilege,
+				SeTimeZonePrivilege:                       entry.Privileges.SeTimeZonePrivilege,
+				SeCreateSymbolicLinkPrivilege:             entry.Privileges.SeCreateSymbolicLinkPrivilege,
+				SeDelegateSessionUserImpersonatePrivilege: entry.Privileges.SeDelegateSessionUserImpersonatePrivilege,
+			},
+			ElevationStatus: entry.ElevationStatus,
+			ParentName:      entry.ParentName,
+			ChildName:       entry.ChildName,
+		}
+		a.Report.Process.WindowsProcess = append(a.Report.Process.WindowsProcess, proc)
 	}
 
 	return nil
@@ -390,7 +655,6 @@ func (a *Analysis) parse(filename string, whereToSave any) error {
 
 // Cleanup deletes the environment after the analysis finished.
 func (a *Analysis) Cleanup() error {
-	a.env.sshClient.Close()
 	err := a.env.destroy()
 	if err != nil {
 		return fmt.Errorf("failed to destroy environment: %v", err)

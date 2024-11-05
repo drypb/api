@@ -19,7 +19,7 @@ const (
 	sshUser                 = "administrator"
 	sshKeyPath              = "/run/secrets/key"
 	sshMaxAttempts          = 6
-	sshDelayAttemptsSeconds = 5
+	sshDelayAttemptsSeconds = 10
 
 	startMaxAttempts          = 12
 	startDelayAttemptsSeconds = 5
@@ -218,7 +218,7 @@ func (e *Environment) dialSSHWithRetry(config *ssh.ClientConfig, attempts int, d
 		time.Sleep(delay)
 	}
 	log.Printf("Failed to connect via SSH after %d attempts", attempts)
-	return errors.New("failed to connected")
+	return errors.New("failed to dial SSH")
 }
 
 // Destroy deletes the environment.
