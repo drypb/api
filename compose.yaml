@@ -13,8 +13,8 @@ services:
   api:
     image: api:latest
     env_file: api.env
-    ports:
-      - 4000:4000
+    #ports:
+      #- 4000:4000
     secrets:
       - key
     network_mode: host

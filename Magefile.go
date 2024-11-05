@@ -22,7 +22,7 @@ func Clean() error {
 }
 
 func Deploy() error {
-	err := sh.RunV("go", "run", "./scripts/dagger.go")
+	err := sh.RunV("sudo", "go", "run", "./scripts/dagger.go")
 	if err != nil {
 		return err
 	}

@@ -31,7 +31,7 @@ func (app *application) startAnalysisHandler(w http.ResponseWriter, r *http.Requ
 	// TODO
 	v := validator.New()
 	v.Check(templateString != "", "template", "must be provided")
-	v.Check(validator.PermittedValue(templateString, "9011"), "template", "must be 9011")
+	v.Check(validator.PermittedValue(templateString, "105", "9011"), "template", "must be 9011")
 	if !v.Valid() {
 		app.failedValidationResponse(w, r, v.Errors)
 		return

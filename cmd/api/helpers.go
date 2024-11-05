@@ -36,7 +36,7 @@ func (app *application) ReadIDParam(r *http.Request) (string, error) {
 type envelope map[string]any
 
 func (app *application) writeJSON(w http.ResponseWriter, status int, data envelope, headers http.Header) error {
-	js, err := json.MarshalIndent(data, "", "\t")
+	js, err := json.MarshalIndent(data, "", "  ")
 	if err != nil {
 		return err
 	}
