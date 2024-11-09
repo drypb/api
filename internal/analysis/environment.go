@@ -245,6 +245,9 @@ func (e *Environment) stop() error {
 }
 
 func (e *Environment) stopWithRetry(attempts int, delay time.Duration) error {
+	if e.vm == nil {
+		return fmt.Errorf("vm pointer is nil")
+	}
 	task, err := e.vm.Stop(context.Background())
 	if err != nil {
 		return fmt.Errorf("failed to stop virtual machine: %v", err)

@@ -9,5 +9,5 @@ FROM build-stage AS test-stage
 RUN go test ./...
 
 FROM test-stage AS deploy-stage
-ENTRYPOINT ["./bin/api", "-env=production", "-queueMaxWorkers=5"]
+ENTRYPOINT ["./bin/api", "-env=production", "-queueMaxWorkers=10"]
 

@@ -3,9 +3,6 @@
 package main
 
 import (
-	"errors"
-	"strings"
-
 	"github.com/magefile/mage/sh"
 )
 
@@ -22,38 +19,14 @@ func Clean() error {
 }
 
 func Deploy() error {
-	err := sh.RunV("sudo", "go", "run", "./scripts/dagger.go")
+	var err error
+	err = sh.RunV("sudo", "docker", "build", "-t", "api:latest", ".")
 	if err != nil {
 		return err
 	}
-	output, err := sh.Output("sudo", "docker", "load", "-i", "/tmp/api.tar")
-	if err != nil {
-		return err
-	}
-	imageID, err := extractImageID(output)
-	if err != nil {
-		return err
-	}
-	err = sh.RunV("sudo", "docker", "tag", imageID, "api:latest")
-	if err != nil {
-		return err
-	}
-	err = sh.RunV("sudo", "docker", "compose", "up", "-d")
+	err = sh.RunV("sudo", "docker", "compose", "-f", "deployments/docker-compose.yaml", "up", "-d")
 	if err != nil {
 		return err
 	}
 	return nil
-}
-
-func extractImageID(output string) (string, error) {
-	lines := strings.Split(output, "\n")
-	for _, line := range lines {
-		if strings.HasPrefix(line, "Loaded image ID: ") {
-			parts := strings.Split(line, ":")
-			if len(parts) == 3 {
-				return parts[2], nil
-			}
-		}
-	}
-	return "", errors.New("image ID not found in docker load output")
 }

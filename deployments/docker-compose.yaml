@@ -12,7 +12,7 @@ services:
       timeout: 10s
   api:
     image: api:latest
-    env_file: api.env
+    env_file: ../api.env
     #ports:
       #- 4000:4000
     secrets:
