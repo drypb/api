@@ -19,6 +19,27 @@ func newQueue(cfg *config.Config) *amqp.Connection {
 	return conn
 }
 
+func (app *application) startWorkers() {
+	errCh := make(chan error)
+
+	for range app.config.Queue.MaxWorkers {
+		go func() {
+			for {
+				err := app.consume()
+				if err != nil {
+					errCh <- err
+				}
+			}
+		}()
+	}
+
+	go func() {
+		for err := range errCh {
+			log.Printf("Worker failed: %v", err)
+		}
+	}()
+}
+
 func (app *application) consume() error {
 	ch, err := app.queue.Channel()
 	if err != nil {

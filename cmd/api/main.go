@@ -48,17 +48,7 @@ func main() {
 	}
 
 	app.createEssentialDirs()
-
-	// Spawn workers.
-	for range cfg.Queue.MaxWorkers {
-		go func() {
-			err := app.consume()
-			if err != nil {
-				app.logger.PrintError(err, nil)
-				return
-			}
-		}()
-	}
+	app.startWorkers()
 
 	logger.PrintInfo("starting server", map[string]string{
 		"addr":        srv.Addr,
