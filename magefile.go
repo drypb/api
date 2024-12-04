@@ -7,6 +7,8 @@ import (
 	"github.com/magefile/mage/sh"
 )
 
+var Default = Build
+
 func Build() error {
 	return sh.RunV("go", "build", "-o", "bin/api", "./cmd/api")
 }
@@ -17,6 +19,10 @@ func Test() error {
 
 func Clean() error {
 	return sh.RunV("rm", "-rf", "bin")
+}
+
+func Tidy() error {
+	return sh.RunV("go", "mod", "tidy")
 }
 
 func Deploy() error {

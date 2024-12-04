@@ -1,4 +1,4 @@
-package main
+package queue
 
 import (
 	"context"
@@ -8,25 +8,15 @@ import (
 
 	"github.com/drypb/api/internal/analysis"
 	"github.com/drypb/api/internal/config"
-	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-func newQueue(cfg *config.Config) *amqp.Connection {
-	conn, err := amqp.Dial(cfg.Queue.URL)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return conn
-}
-
-func (app *application) startWorkers() {
+func StartWorkers() {
 	errCh := make(chan error)
 
-	for range app.config.Queue.MaxWorkers {
+	for range config.Api.Queue.MaxWorkers {
 		go func() {
 			for {
-				err := app.consume()
-				if err != nil {
+				if err := consume(); err != nil {
 					errCh <- err
 				}
 			}
@@ -40,8 +30,8 @@ func (app *application) startWorkers() {
 	}()
 }
 
-func (app *application) consume() error {
-	ch, err := app.queue.Channel()
+func consume() error {
+	ch, err := Conn.Channel()
 	if err != nil {
 		return err
 	}
@@ -86,21 +76,18 @@ func (app *application) consume() error {
 			ID       string                `json:"id"`
 			Template int                   `json:"template"`
 		}
-		err := json.Unmarshal(d.Body, &task)
-		if err != nil {
+		if err := json.Unmarshal(d.Body, &task); err != nil {
 			return err
 		}
 		a, err := analysis.New(task.Header, task.ID, task.Template)
 		if err != nil {
 			return err
 		}
-		err = a.Run(context.Background())
-		if err != nil {
+		if err := a.Run(context.Background()); err != nil {
 			a.Report.Request.Error = err.Error()
 			a.Report.Save("status")
 			a.Report.Save("report")
-			err = a.Cleanup()
-			if err != nil {
+			if err := a.Cleanup(); err != nil {
 				return err
 			}
 			return err

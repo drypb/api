@@ -1,70 +1,53 @@
-package main
+package handler
 
 import (
 	"context"
 	"encoding/json"
-	"io"
 	"mime/multipart"
-	"net/http"
-	"os"
 	"path/filepath"
 	"strconv"
 	"time"
 
 	"github.com/drypb/api/internal/config"
+	"github.com/drypb/api/internal/queue"
 	"github.com/drypb/api/internal/validator"
+	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-// startAnalysisHandler starts an analysis.
-func (app *application) startAnalysisHandler(w http.ResponseWriter, r *http.Request) {
-	templateString := r.FormValue("template")
-	file, header, err := r.FormFile("file")
+func StartAnalysis(c *fiber.Ctx) error {
+	templateString := c.FormValue("template")
+	file, err := c.FormFile("file")
 	if err != nil {
-		app.badRequestResponse(w, r, err)
-		return
+		return badRequestResponse(c, err)
 	}
-	defer file.Close()
 
 	// TODO
 	v := validator.New()
 	v.Check(templateString != "", "template", "must be provided")
 	v.Check(validator.PermittedValue(templateString, "105", "9011"), "template", "must be 9011")
 	if !v.Valid() {
-		app.failedValidationResponse(w, r, v.Errors)
-		return
+		return failedValidationResponse(c, v.Errors)
 	}
 
-	ext := filepath.Ext(header.Filename)
-	id := uuid.New().String()
 	template, err := strconv.Atoi(templateString)
 	if err != nil {
-		app.serverErrorResponse(w, r, err)
-		return
+		return serverErrorResponse(c, err)
 	}
 
-	// Create file.
-	samplePath := filepath.Join(config.SamplePath, id+ext)
-	sample, err := os.Create(samplePath)
+	id := uuid.New().String()
+	ext := filepath.Ext(file.Filename)
+	path := filepath.Join(config.SamplePath, id+ext)
+	err = c.SaveFile(file, path)
 	if err != nil {
-		app.serverErrorResponse(w, r, err)
-		return
-	}
-	defer sample.Close()
-
-	// Copy uploaded file content to the newly created sample file.
-	_, err = io.Copy(sample, file)
-	if err != nil {
-		app.serverErrorResponse(w, r, err)
-		return
+		return serverErrorResponse(c, err)
 	}
 
-	ch, err := app.queue.Channel()
+	ch, err := queue.Conn.Channel()
 	if err != nil {
-		app.serverErrorResponse(w, r, err)
-		return
+		return serverErrorResponse(c, err)
 	}
 
 	q, err := ch.QueueDeclare(
@@ -76,8 +59,7 @@ func (app *application) startAnalysisHandler(w http.ResponseWriter, r *http.Requ
 		nil,          // arguments
 	)
 	if err != nil {
-		app.serverErrorResponse(w, r, err)
-		return
+		return serverErrorResponse(c, err)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -88,15 +70,14 @@ func (app *application) startAnalysisHandler(w http.ResponseWriter, r *http.Requ
 		ID       string                `json:"id"`
 		Template int                   `json:"template"`
 	}{
-		Header:   header,
+		Header:   file,
 		ID:       id,
 		Template: template,
 	}
 
 	jsonBody, err := json.Marshal(body)
 	if err != nil {
-		app.serverErrorResponse(w, r, err)
-		return
+		return serverErrorResponse(c, err)
 	}
 
 	err = ch.PublishWithContext(
@@ -107,15 +88,15 @@ func (app *application) startAnalysisHandler(w http.ResponseWriter, r *http.Requ
 		false,
 		amqp.Publishing{
 			DeliveryMode: amqp.Persistent,
-			ContentType:  "text/application-json",
+			ContentType:  "application/json",
 			Body:         jsonBody,
 		},
 	)
 	if err != nil {
-		app.serverErrorResponse(w, r, err)
-		return
+		return serverErrorResponse(c, err)
 	}
 
-	data := envelope{"id": id}
-	app.writeJSON(w, http.StatusCreated, envelope{"analysis": data}, nil)
+	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
+		"id": id,
+	})
 }

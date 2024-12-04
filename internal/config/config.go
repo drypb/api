@@ -23,21 +23,21 @@ type Config struct {
 	}
 }
 
-func LoadConfig() (*Config, error) {
-	var cfg Config
+var Api *Config
 
-	flag.IntVar(&cfg.Port, "port", 4000, "API server port")
+func Init() error {
+	flag.IntVar(&Api.Port, "port", 4000, "API server port")
 
-	flag.StringVar(&cfg.Queue.URL, "queueURL", os.Getenv("QUEUE_URL"), "Queue URL")
-	flag.IntVar(&cfg.Queue.MaxWorkers, "queueMaxWorkers", 10, "Maximum number of parallel workers")
+	flag.StringVar(&Api.Queue.URL, "queueURL", os.Getenv("QUEUE_URL"), "Queue URL")
+	flag.IntVar(&Api.Queue.MaxWorkers, "queueMaxWorkers", 10, "Maximum number of parallel workers")
 
-	flag.StringVar(&cfg.Env, "env", "development", "Environment (development|staging|production)")
+	flag.StringVar(&Api.Env, "env", "development", "Environment (development|staging|production)")
 
 	flag.Parse()
 
-	if cfg.Queue.URL == "" {
-		return nil, fmt.Errorf("Queue URL is empty")
+	if Api.Queue.URL == "" {
+		return fmt.Errorf("Queue URL is empty")
 	}
 
-	return &cfg, nil
+	return nil
 }

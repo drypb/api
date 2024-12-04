@@ -1,14 +1,13 @@
-package main
+package handler
 
 import (
-	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
 	"time"
 
 	"github.com/drypb/api/internal/config"
-	"github.com/gorilla/websocket"
+	"github.com/gofiber/websocket/v2"
 )
 
 const (
@@ -25,9 +24,28 @@ const (
 	filePeriod = 1 * time.Second
 )
 
+// GetStatus handles the WebSocket connection and sends status updates.
+func GetStatus(c *websocket.Conn) {
+	id := c.Params("id")
+	if id == "" {
+		return
+	}
+
+	// Optionally, the initial value of lastMod can be set as a query parameter
+	lastMod := time.Time{}
+	if n, err := strconv.ParseInt(c.Query("lastMod"), 16, 64); err == nil {
+		lastMod = time.Unix(0, n)
+	}
+
+	path := filepath.Join(config.StatusPath, id+".json")
+
+	go Writer(c, path, lastMod)
+	Reader(c)
+}
+
+// ReadFileIfModified checks if the file has been modified since the last time it was read.
 func ReadFileIfModified(filePath string, lastMod time.Time) ([]byte, time.Time, error) {
 	fi, err := os.Stat(filePath)
-
 	if err != nil {
 		return nil, lastMod, err
 	}
@@ -37,7 +55,6 @@ func ReadFileIfModified(filePath string, lastMod time.Time) ([]byte, time.Time, 
 	}
 
 	p, err := os.ReadFile(filePath)
-
 	if err != nil {
 		return nil, fi.ModTime(), err
 	}
@@ -45,11 +62,17 @@ func ReadFileIfModified(filePath string, lastMod time.Time) ([]byte, time.Time, 
 	return p, fi.ModTime(), nil
 }
 
+// Reader reads incoming messages from the WebSocket client.
 func Reader(ws *websocket.Conn) {
 	defer ws.Close()
+
 	ws.SetReadLimit(512)
 	ws.SetReadDeadline(time.Now().Add(pongWait))
-	ws.SetPongHandler(func(string) error { ws.SetReadDeadline(time.Now().Add(pongWait)); return nil })
+	ws.SetPongHandler(func(string) error {
+		ws.SetReadDeadline(time.Now().Add(pongWait))
+		return nil
+	})
+
 	for {
 		_, _, err := ws.ReadMessage()
 		if err != nil {
@@ -58,6 +81,7 @@ func Reader(ws *websocket.Conn) {
 	}
 }
 
+// Writer writes messages to the WebSocket client at regular intervals.
 func Writer(ws *websocket.Conn, filePath string, lastMod time.Time) {
 	lastError := ""
 	pingTicker := time.NewTicker(pingPeriod)
@@ -67,6 +91,7 @@ func Writer(ws *websocket.Conn, filePath string, lastMod time.Time) {
 		fileTicker.Stop()
 		ws.Close()
 	}()
+
 	for {
 		select {
 		case <-fileTicker.C:
@@ -97,42 +122,4 @@ func Writer(ws *websocket.Conn, filePath string, lastMod time.Time) {
 			}
 		}
 	}
-}
-
-func (app *application) getStatusHandler(w http.ResponseWriter, r *http.Request) {
-	id, err := app.ReadIDParam(r)
-	if err != nil {
-		if err == ErrInvalidID || err == ErrEmptyID {
-			app.badRequestResponse(w, r, err)
-		} else {
-			app.serverErrorResponse(w, r, err)
-		}
-		return
-	}
-
-	upgrader := websocket.Upgrader{
-		ReadBufferSize:  1024,
-		WriteBufferSize: 1024,
-	}
-
-	ws, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		_, ok := err.(websocket.HandshakeError)
-		if !ok {
-			app.serverErrorResponse(w, r, err)
-		}
-		return
-	}
-
-	// optionally, the initial value of lastMod can be set as a query parameter
-	lastMod := time.Time{}
-	n, err := strconv.ParseInt(r.FormValue("lastMod"), 16, 64)
-	if err == nil {
-		lastMod = time.Unix(0, n)
-	}
-
-	path := filepath.Join(config.StatusPath, id+".json")
-
-	go Writer(ws, path, lastMod)
-	Reader(ws)
 }
