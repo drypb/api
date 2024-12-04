@@ -3,6 +3,7 @@
 package main
 
 import (
+	"github.com/carolynvs/magex/pkg"
 	"github.com/magefile/mage/sh"
 )
 
@@ -29,4 +30,8 @@ func Deploy() error {
 		return err
 	}
 	return nil
+}
+
+func EnsureMage() error {
+	return pkg.EnsureMage("")
 }
