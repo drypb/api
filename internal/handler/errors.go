@@ -19,11 +19,10 @@ func errorResponse(c *fiber.Ctx, status int, msg any) error {
 }
 
 func serverErrorResponse(c *fiber.Ctx, err error) error {
-	msg := "the server encountered a problem and could not process your request"
-	return errorResponse(c, fiber.StatusInternalServerError, msg)
+	return errorResponse(c, fiber.StatusInternalServerError, err.Error)
 }
 
-func notFoundResponse(c *fiber.Ctx) error {
+func NotFoundResponse(c *fiber.Ctx) error {
 	msg := "the requested resource could not be found"
 	return errorResponse(c, fiber.StatusNotFound, msg)
 }

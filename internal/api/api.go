@@ -14,16 +14,8 @@ import (
 )
 
 func Run() error {
-	err := config.Init()
-	if err != nil {
-		return err
-	}
-
-	err = queue.Init()
-	if err != nil {
-		return err
-	}
-	queue.StartWorkers()
+	config.Api.Init()
+	queue.Analysis.Init()
 
 	app := fiber.New(fiber.Config{
 		ReadTimeout:  10 * time.Second,

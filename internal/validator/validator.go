@@ -1,13 +1,6 @@
 // Package validator helps the API validate client input.
 package validator
 
-import "regexp"
-
-var (
-	// EmailRX is a regular expression to identify valid emails.
-	EmailRX = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
-)
-
 type Validator struct {
 	Errors map[string]string // Errors store all the error messages [Validator] catches.
 }
@@ -45,18 +38,4 @@ func PermittedValue[T comparable](value T, permittedValues ...T) bool {
 		}
 	}
 	return false
-}
-
-// Matches returns true if the regular expression matches.
-func Matches(value string, rx *regexp.Regexp) bool {
-	return rx.MatchString(value)
-}
-
-// Unique returns true if there are no repetitions in values.
-func Unique(values []string) bool {
-	uniqueValues := make(map[string]bool)
-	for _, value := range values {
-		uniqueValues[value] = true
-	}
-	return len(values) == len(uniqueValues)
 }

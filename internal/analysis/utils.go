@@ -101,7 +101,7 @@ func getDriverVersion(template int) string {
 func getFatalEnv(env string) string {
 	e := os.Getenv(env)
 	if e == "" {
-		panic(fmt.Sprintf("%s is empty", e))
+		panic(fmt.Sprintf("%s is empty", env))
 	}
 	return e
 }

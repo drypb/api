@@ -11,12 +11,19 @@ import (
 )
 
 func GetReport(c *fiber.Ctx) error {
-	id := c.Params("d")
+	id := c.Params("id")
 	if id == "" {
 		return badRequestResponse(c, ErrEmptyID)
 	}
 
 	path := filepath.Join(config.ReportPath, id+".json")
+
+	// Verifica se o arquivo existe
+	_, err := os.Stat(path)
+	if err != nil {
+		return NotFoundResponse(c)
+	}
+
 	file, err := os.Open(path)
 	if err != nil {
 		return serverErrorResponse(c, err)

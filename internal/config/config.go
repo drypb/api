@@ -3,8 +3,6 @@ package config
 
 import (
 	"flag"
-	"fmt"
-	"os"
 )
 
 const (
@@ -18,26 +16,20 @@ type Config struct {
 	Port  int
 	Env   string
 	Queue struct {
-		URL        string
 		MaxWorkers int
+		Capacity   int
 	}
 }
 
 var Api Config
 
-func Init() error {
-	flag.IntVar(&Api.Port, "port", 4000, "API server port")
+func (c *Config) Init() {
+	flag.IntVar(&c.Port, "port", 4000, "API server port")
 
-	flag.StringVar(&Api.Queue.URL, "queueURL", os.Getenv("QUEUE_URL"), "Queue URL")
-	flag.IntVar(&Api.Queue.MaxWorkers, "queueMaxWorkers", 10, "Maximum number of parallel workers")
+	flag.StringVar(&c.Env, "env", "development", "Environment (development|staging|production)")
 
-	flag.StringVar(&Api.Env, "env", "development", "Environment (development|staging|production)")
+	flag.IntVar(&c.Queue.MaxWorkers, "queueMaxWorkers", 10, "Maximum number of parallel workers")
+	flag.IntVar(&c.Queue.MaxWorkers, "queueCapacity", 100, "Capacity of the queue")
 
 	flag.Parse()
-
-	if Api.Queue.URL == "" {
-		return fmt.Errorf("QUEUE_URL is empty")
-	}
-
-	return nil
 }

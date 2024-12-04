@@ -26,16 +26,11 @@ func Tidy() error {
 }
 
 func Deploy() error {
-	var err error
-	err = sh.RunV("sudo", "docker", "build", "-t", "api:latest", ".")
+	err := sh.RunV("sudo", "docker", "build", "-t", "api:latest", ".")
 	if err != nil {
 		return err
 	}
-	err = sh.RunV("sudo", "docker", "compose", "-f", "deployments/docker-compose.yaml", "up", "-d")
-	if err != nil {
-		return err
-	}
-	return nil
+	return sh.RunV("sudo", "docker", "compose", "-f", "deployments/docker-compose.yaml", "up", "-d")
 }
 
 func EnsureMage() error {
