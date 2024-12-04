@@ -23,7 +23,7 @@ type Config struct {
 	}
 }
 
-var Api *Config
+var Api Config
 
 func Init() error {
 	flag.IntVar(&Api.Port, "port", 4000, "API server port")
@@ -36,7 +36,7 @@ func Init() error {
 	flag.Parse()
 
 	if Api.Queue.URL == "" {
-		return fmt.Errorf("Queue URL is empty")
+		return fmt.Errorf("QUEUE_URL is empty")
 	}
 
 	return nil
