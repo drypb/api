@@ -42,7 +42,7 @@ func (c *Config) Init() {
 	flag.StringVar(&c.Env, "env", "development", "Environment (development|staging|production)")
 
 	flag.IntVar(&c.Queue.MaxWorkers, "queueMaxWorkers", 10, "Maximum number of parallel workers")
-	flag.IntVar(&c.Queue.MaxWorkers, "queueCapacity", 100, "Capacity of the queue")
+	flag.IntVar(&c.Queue.Capacity, "queueCapacity", 100, "Capacity of the queue")
 
 	flag.Parse()
 }
