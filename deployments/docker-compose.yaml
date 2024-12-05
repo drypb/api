@@ -1,15 +1,4 @@
 services:
-  rabbitmq:
-    image: rabbitmq:latest
-    ports:
-      - 5672:5672
-      - 15672:15672
-    healthcheck:
-      test: ["CMD-SHELL", "rabbitmqctl list_queues"]
-      interval: 10s
-      retries: 5
-      start_period: 30s
-      timeout: 10s
   api:
     image: api:latest
     env_file: ../api.env
@@ -18,9 +7,6 @@ services:
     secrets:
       - key
     network_mode: host
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
 
 secrets:
   key:

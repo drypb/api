@@ -3,10 +3,10 @@
 FROM golang:1.22.6 AS build-stage
 WORKDIR /app
 COPY . .
-RUN go build -o bin/api ./cmd/api
+RUN go run mage.go
 
 FROM build-stage AS test-stage
-RUN go test ./...
+RUN go run mage.go test
 
 FROM test-stage AS deploy-stage
 ENTRYPOINT ["./bin/api", "-env=production", "-queueMaxWorkers=10"]
