@@ -28,7 +28,7 @@ func NotFoundResponse(c *fiber.Ctx) error {
 }
 
 func methodNotAllowedResponse(c *fiber.Ctx) error {
-	msg := fmt.Sprintf("the %s method is not supported for this resource", c.Method)
+	msg := fmt.Sprintf("the %s method is not supported for this resource", c.Method())
 	return errorResponse(c, fiber.StatusMethodNotAllowed, msg)
 }
 

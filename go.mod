@@ -18,6 +18,7 @@ require (
 )
 
 require (
+	dagger.io/dagger v0.14.0 // indirect
 	github.com/99designs/gqlgen v0.17.55 // indirect
 	github.com/Khan/genqlient v0.7.0 // indirect
 	github.com/Masterminds/semver/v3 v3.1.1 // indirect
