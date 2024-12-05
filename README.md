@@ -9,10 +9,10 @@ curl 200.17.212.244:4000/v1/healthcheck
 To check if the api is running.
 
 ```bash
-curl 200.17.212.244:4000/v1/analysis -XPOST -F "template=9011" -F "file=@fff351ad66140a5e49eb323c4bf53700.exe"
+curl 200.17.212.244:4000/v1/analysis -XPOST -F "template=105" -F "file=@fff351ad66140a5e49eb323c4bf53700.exe"
 ```
 
-This will start an analysis using the template 9011 and the malware
+This will start an analysis using the template 105 and the malware
 fff351ad66140a5e49eb323c4bf53700.exe and it will return an ID (in this case was
 1139bb22-ca7e-44c1-9995-ad0908d3f609, but this is random) that will be used to
 get information about the analysis.
@@ -44,5 +44,9 @@ PROXMOX_URL=
 2. Build
 
 ```
-mage deploy
+mage BuildAndDeploy
 ```
+
+or `go run mage.go BuildAndDeploy` if you don't have mage installed.
+
+You can install mage with `go run mage.go EnsureMage`.
