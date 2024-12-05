@@ -14,8 +14,11 @@ import (
 )
 
 func Run() error {
-	config.Api.Init()
-	queue.Analysis.Init()
+	apiConfig := config.GetApiConfig()
+	apiConfig.Init()
+
+	analysisQueue := queue.GetAnalysisQueue()
+	analysisQueue.Init()
 
 	app := fiber.New(fiber.Config{
 		ReadTimeout:  10 * time.Second,

@@ -5,7 +5,6 @@ go 1.22.5
 toolchain go1.22.6
 
 require (
-	dagger.io/dagger v0.13.7
 	github.com/carolynvs/magex v0.9.0
 	github.com/gabriel-vasile/mimetype v1.4.5
 	github.com/gofiber/fiber/v2 v2.52.5
@@ -14,7 +13,6 @@ require (
 	github.com/luthermonson/go-proxmox v0.1.0
 	github.com/magefile/mage v1.15.0
 	github.com/pkg/sftp v1.13.6
-	github.com/rabbitmq/amqp091-go v1.10.0
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/crypto v0.27.0
 )

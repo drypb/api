@@ -2,20 +2,33 @@ package queue
 
 import (
 	"log"
+	"sync"
 
 	"github.com/drypb/api/internal/config"
 )
-
-var Analysis Queue
 
 type Queue struct {
 	jobs       chan *Job
 	numWorkers int
 }
 
+var Analysis *Queue
+var once sync.Once
+
+func GetAnalysisQueue() *Queue {
+	if Analysis == nil {
+		once.Do(
+			func() {
+				Analysis = &Queue{}
+			})
+	}
+	return Analysis
+}
+
 func (q *Queue) Init() {
-	q.jobs = make(chan *Job, config.Api.Queue.Capacity)
-	q.numWorkers = config.Api.Queue.MaxWorkers
+	apiConfig := config.GetApiConfig()
+	q.jobs = make(chan *Job, apiConfig.Queue.Capacity)
+	q.numWorkers = apiConfig.Queue.MaxWorkers
 	q.initWorkers()
 }
 

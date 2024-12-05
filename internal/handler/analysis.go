@@ -43,7 +43,8 @@ func StartAnalysis(c *fiber.Ctx) error {
 		File:     file,
 		Template: template,
 	}
-	queue.Analysis.Enqueue(j)
+	analysisQueue := queue.GetAnalysisQueue()
+	analysisQueue.Enqueue(j)
 
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"id": id,

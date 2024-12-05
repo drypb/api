@@ -3,6 +3,7 @@ package config
 
 import (
 	"flag"
+	"sync"
 )
 
 const (
@@ -21,7 +22,19 @@ type Config struct {
 	}
 }
 
-var Api Config
+var Api *Config
+var once sync.Once
+
+func GetApiConfig() *Config {
+	if Api == nil {
+		once.Do(
+			func() {
+				Api = &Config{}
+			})
+	}
+
+	return Api
+}
 
 func (c *Config) Init() {
 	flag.IntVar(&c.Port, "port", 4000, "API server port")
