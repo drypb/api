@@ -4,6 +4,7 @@
 package api
 
 import (
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -24,6 +25,9 @@ func Run() error {
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 30 * time.Second,
 		IdleTimeout:  1 * time.Minute,
+		JSONEncoder: func(v any) ([]byte, error) {
+			return json.MarshalIndent(v, "", "  ")
+		},
 	})
 
 	router.SetupRoutes(app)
